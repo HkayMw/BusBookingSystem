@@ -8,6 +8,8 @@ namespace BusBookingSystem.Core.Entities
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public Guid UserId { get; set; }
-        public string? Address { get; set; }
+        public Address Address { get; set; } = null!;
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset? UpdatedAt { get; set; }
     }
 }
