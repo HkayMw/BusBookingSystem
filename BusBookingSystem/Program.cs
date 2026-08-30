@@ -1,4 +1,4 @@
-using BusBookingSystem.Models;
+//using BusBookingSystem.Core.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +22,7 @@ var app = builder.Build();
 //    ManufactureDate = new DateTime(2020, 1, 1),
 //    IsActive = true
 //};
-//Console.WriteLine($"Test Bus: {testBus.Id} with {testBus.Capacity} seats");
+//Console.WriteLine($"Test Hkay Bus: {testBus.Id} with {testBus.Capacity} seats");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
