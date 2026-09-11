@@ -4,11 +4,12 @@ using System.Text;
 
 namespace BusBookingSystem.Core.Entities
 {
-    internal class Customer
+    public class Route
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public Guid UserId { get; set; }
-        public Address Address { get; set; } = null!;
+        public required string Name { get; set; }
+        public required Guid OriginDeportId { get; set; }
+        public required Guid DestinationDeportId { get; set; }
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset? UpdatedAt { get; set; }
     }

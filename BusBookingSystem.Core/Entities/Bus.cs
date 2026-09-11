@@ -4,7 +4,7 @@ using System.Text;
 
 namespace BusBookingSystem.Core.Entities
 {
-    internal class Bus
+    public class Bus
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public string FleetNumber { get; set; }=null!;
