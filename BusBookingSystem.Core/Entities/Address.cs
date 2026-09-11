@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace BusBookingSystem.Core.Entities
+﻿namespace BusBookingSystem.Core.Entities
 {
     public class Address
     {
