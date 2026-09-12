@@ -1,12 +1,8 @@
-﻿namespace BusBookingSystem.Core.Entities
+﻿using BusBookingSystem.Core.Enums;
+
+namespace BusBookingSystem.Core.Entities
 {
-    public enum UserType
-    {
-        Admin,
-        Customer,
-        Driver,
-        Operator
-    }
+    
 
     public class User
     {

@@ -3,7 +3,7 @@
     public class Bus
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public string FleetNumber { get; set; }=null!;
+        public string? FleetNumber { get; set; }
         public required string Model { get; set; }
         public required int Capacity { get; set; }
         public required string RegistrationNumber { get; set; }

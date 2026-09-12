@@ -1,613 +1,374 @@
-# Day 2 Walkthrough — Application Layer: Read-Side Contracts
+# Day 2 Walkthrough - Application Contracts From MVP Use Cases
 
-This is the day-2 implementation pass for the 9-day MVP plan.
+This is the day 2 implementation pass for the 9-day MVP plan.
 
-Goal for today:
-- Define the DTOs the API will return.
-- Define the service interfaces the API will depend on.
-- Keep the Application project focused on contracts, not database logic.
-- Align with the simpler design: Infrastructure uses AppDbContext directly rather than repository classes.
+The guiding rule for today is:
 
-Important rule for today:
-- Do not implement the database or EF Core yet.
-- Do not build endpoints yet.
-- Do not add business logic like validation rules or booking logic.
-- Keep this day limited to contracts and mapping boundaries.
+> Start with what the user must do, then define only the data and service methods needed to support it.
 
----
+Do not copy every entity property into every DTO. Do not create contracts for features that are not part of this MVP.
 
-## 1) Confirm the Day 1 foundation
+## 1) Define the MVP read-side use cases
 
-Before writing any Application code, confirm the Core layer contains the domain objects you agreed on:
+The read-side of this bus booking MVP needs to support this basic journey:
 
-- Depot
-- Bus
-- Address
-- Route
-- Trip
-- Booking
-- User
-- BookingStatus enum
+1. A customer chooses an origin depot, destination depot, and travel date.
+2. The system returns matching trips.
+3. The customer selects one trip.
+4. The system returns enough detail to confirm the selected trip before booking.
+5. Later, Day 5 uses the selected trip ID when creating a booking.
 
-Your Day 1 entities are the source of truth. The Application layer should only describe what data can be requested and what operations are available.
+That journey determines what Day 2 needs to define.
 
-Check these assumptions before starting:
-- A trip connects to a Bus and a Route.
-- A route connects origin and destination depots.
-- A booking is attached to a user and a trip.
-- The Day 1 model is intentionally simple and does not include a full UI or EF setup.
-
-If the Core model is still incomplete, fix that before moving forward. Do not start the Application layer on shaky domain objects.
-
----
-
-## 2) Create the Application project structure
-
-Inside the Application project, keep the organization clean:
-
-- DTOs/
-- Interfaces/
-  - Services/
-
-This keeps the project readable and consistent with the layered architecture:
-
-Core -> Application -> Infrastructure -> API
-
-The Application project should only reference Core. It should not reference Infrastructure or API.
-
-If you do not yet have the folders, create them manually.
-
----
-
-## 3) Add the DTOs
-
-Create DTO models that represent the shape of the data returned from the system.
-
-A DTO is not just a copy of the entity. It is a response contract for the API and the consumer. That is why it usually includes an Id: the caller needs a stable identifier to route to a specific item, link to a detail screen, or use in a later request.
-
-The Id is not about persistence logic; it is about identity in the API contract.
-
-### 3.1 DepotDto
-Purpose: return the data needed to list or detail a depot.
-
-Include fields such as:
-- Id
-- DepotCode
-- Name
-- Address
-- PhoneNumber
-- Latitude
-- Longitude
-- IsActive
-- CreatedAt
-- UpdatedAt
-
-Why include the Id:
-- the client needs to know which depot was selected,
-- later operations may fetch the depot by Id,
-- it matches the natural API pattern of object identifiers in responses.
-
-### 3.2 BusDto
-Purpose: return the bus fleet data used in listings and trip details.
-
-Include fields such as:
-- Id
-- FleetNumber
-- Model
-- Capacity
-- RegistrationNumber
-- ManufacturerName
-- ManufactureYear
-- IsAvailable
-- IsActive
-- CreatedAt
-- UpdatedAt
-
-Why include the Id:
-- the client may need to show or filter a specific bus,
-- trip and schedule responses often identify the bus with its Id,
-- it keeps the API consistent with other resource-style responses.
-
-### 3.3 RouteDto
-Purpose: return a route definition so the client can browse source-destination combinations.
-
-Include fields such as:
-- Id
-- Name
-- OriginDepotId
-- DestinationDepotId
-- OriginDepotName
-- DestinationDepotName
-- CreatedAt
-- UpdatedAt
-
-Why include the Id:
-- route selection is usually based on a route record,
-- the client may need to click into or reference a specific route,
-- the Id makes a route usable as a first-class API resource.
-
-### 3.4 TripDto
-Purpose: return the most common object the client will show when browsing schedules and availability.
-
-Include fields such as:
-- Id
-- BusId
-- RouteId
-- BusName or FleetNumber
-- OriginDepotId
-- DestinationDepotId
-- DepartureTime
-- ArrivalTime
-- BaseFare
-- AvailableSeats
-- TotalSeats
-- CreatedAt
-- UpdatedAt
-
-Why include the Id:
-- the client must select a specific trip,
-- booking requests will normally reference the trip by Id,
-- trip search results are only useful if they can be identified as unique records.
-
-### 3.5 TripSearchResultDto
-Purpose: represent one result from a trip-search query.
-
-Include fields such as:
-- Id
-- RouteId
-- OriginDepotId
-- DestinationDepotId
-- OriginDepotName
-- DestinationDepotName
-- DepartureTime
-- ArrivalTime
-- BaseFare
-- AvailableSeats
-- BusModel
-- BusCapacity
-
-Why include the Id:
-- the caller will need to choose which trip to book,
-- this DTO is the search result contract, not the full entity,
-- the Id is the key value that makes the search result actionable.
-
-### 3.6 DTO design guidance
-
-Keep these points in mind:
-- Use simple properties, not nested domain objects.
-- Keep naming consistent: Id, Name, CreatedAt, etc.
-- Prefer plain C# types that are easy to serialize to JSON.
-- Do not include logic in the DTOs.
-- Keep each DTO focused on one purpose: list, detail, or search result.
-
-A DTO is a contract, not a business object.
-
----
-
-## 4) Keep the data access boundary simple
-
-For this project, we are not using repository classes. The simpler design is:
-- Application layer defines service contracts.
-- Infrastructure layer owns AppDbContext.
-- The service implementation uses DbContext directly to query data.
+For now, do not design for:
 
-This is the preferred approach unless there is a strong reason to introduce repository abstractions later.
+- admin dashboards,
+- bus maintenance screens,
+- editing depots,
+- payments,
+- cancellation workflows,
+- passenger management,
+- reporting,
+- route planning beyond origin and destination.
 
-The key principle is: do not add a custom wrapper around DbContext unless the project grows enough to justify it. A repository is usually just another abstraction layer on top of another abstraction layer.
+Those may be valid future features, but they should not make today's contracts larger.
 
-In practice, that means:
-- no repository interfaces
-- no repository classes
-- no repository folder in the Application project
-- instead, the service implementation injects AppDbContext and calls DbSet queries directly
+## 2) Confirm the domain foundation
 
-This keeps the codebase lighter and easier to move through in the 9-day build window.
+Before creating Application contracts, confirm the Core layer contains the concepts needed by the journey:
 
-The Application layer should not know about EF Core types or DbContext. It only knows the service interface contract.
+- `Depot`
+- `Bus`
+- `Address`
+- `Route`
+- `Trip`
+- `Booking`
+- `User`
+- `UserType`
+- `BookingStatus`
 
----
+The domain entities are the source of data, but they are not automatically the API response shape.
 
-## 5) Create service interfaces
+The Application layer will select the fields needed by each use case and map entity data into DTOs.
 
-The service interfaces live under:
-- Interfaces/Services/
+## 3) Create the Application structure
 
-These are the contracts the API controllers will call later.
+Use this structure:
 
-Each interface should reflect one clear responsibility. Do not make a service interface a dumping ground for every query and operation. The purpose should be obvious from the method names.
+```text
+BusBookingSystem.Application/
+  DTOs/
+  Interfaces/
+    Services/
+```
 
-### 5.1 IDepotService
-Purpose: expose depot read operations used by the API.
+The Application project should reference Core. It should not reference Infrastructure or the API project.
 
-Define methods such as:
-- GetAllAsync()
-- GetByIdAsync(Guid id)
+Do not add repository interfaces or repository classes. Infrastructure will use `AppDbContext` directly inside the service implementations. A custom repository would add another wrapper around the EF Core abstraction without helping this small MVP.
 
-Why this interface exists:
-- the controller should depend on a depot service contract,
-- the implementation can query AppDbContext and return DTOs,
-- it gives the API a stable, testable boundary.
+## 4) Work backward from the trip-search screen
 
-### 5.2 IBusService
-Purpose: expose bus read operations needed for fleet queries and trip display.
+Imagine the eventual request:
 
-Define methods such as:
-- GetAllAsync()
-- GetByIdAsync(Guid id)
+```text
+GET /api/trips/search?originDepotId=...&destinationDepotId=...&date=...
+```
 
-Why this interface exists:
-- the API can ask for bus data without directly depending on EF Core,
-- it separates the controller from data-access details,
-- it keeps the business-facing contract easier to test and reason about.
+The user needs to compare results and select one. Therefore each result must contain:
 
-### 5.3 ITripService
-Purpose: expose trip discovery and trip detail operations.
+- the selected trip's `Id`,
+- enough route information to know where it goes,
+- departure and arrival times,
+- the price,
+- remaining availability,
+- enough bus information to make the result useful.
 
-Define methods like:
-- GetAllAsync()
-- GetByIdAsync(Guid id)
-- SearchTripsAsync(Guid originDepotId, Guid destinationDepotId, DateTime date)
+It does not need database audit timestamps, the complete Bus entity, the complete Route entity, or nested entity objects.
 
-Why this interface exists:
-- trip search is the key read feature of the booking flow,
-- the API needs a simple contract for browsing trips by origin, destination, and date,
-- the implementation can map the raw query results into TripDto or TripSearchResultDto.
+### 4.1 TripSearchResultDto
 
-### 5.4 Service responsibilities for Day 2
+Purpose: one row in the trip-search response.
 
-Keep service interfaces thin and readable.
+Suggested properties:
 
-They should orchestrate the data flow, for example:
-- Service receives a request from the controller.
-- Service queries AppDbContext in Infrastructure.
-- Service maps the entity results to DTOs.
-- Controller receives the DTOs.
+```text
+TripId
+RouteId
+OriginDepotId
+OriginDepotName
+DestinationDepotId
+DestinationDepotName
+DepartureTime
+ArrivalTime
+BaseFare
+AvailableSeats
+BusModel
+```
 
-This is the day to define the orchestration boundary without implementing the logic.
+Why the IDs are included:
 
----
+- `TripId` is required when the customer selects a trip and later creates a booking.
+- `RouteId` identifies the route if the API later needs to link to route details.
+- Depot IDs identify the selected origin and destination without requiring the client to match names.
 
-## 6) Decide whether to add service implementations yet
+Why other entity fields are excluded:
 
-For Day 2, the plan says: "Service interfaces + implementations: IDepotService, IBusService, ITripService — thin orchestration, manual DTO mapping (skip AutoMapper, one less thing to debug this week)."
+- The search screen does not need every bus property.
+- It does not need `CreatedAt` or `UpdatedAt`.
+- It does not need nested `Bus`, `Route`, or `Depot` objects.
+- It does not need internal persistence details.
 
-That means today you can do both:
-- Create the interfaces in Application.
-- Create the implementations in Infrastructure, using AppDbContext directly.
+For the MVP, this is the most important DTO. Build it from the search screen's needs first.
 
-The safe and simple version is:
-- Put service interfaces in Application.
-- Put service implementations in Infrastructure.
+## 5) Work backward from the selected-trip detail
 
-This is clean because:
-- the service interface describes the use case,
-- the Infrastructure implementation contains the actual EF queries,
-- the controller depends only on the interface and the DTO contract.
+After a customer selects a search result, the API may return a trip detail response before the booking request is submitted.
 
-If you want to keep the build clean and low-risk, do this:
-- Create interfaces only on Day 2.
-- Stub out implementation classes later if needed.
+Ask: what must the customer confirm?
 
-The main requirement is the contracts exist clearly and are named correctly.
+- Which trip was selected?
+- Which bus is operating it?
+- Which route is being travelled?
+- When does it leave and arrive?
+- What does it cost?
+- How many seats remain?
 
----
+### 5.1 TripDto
 
-## 7) Avoid AutoMapper today
+Purpose: details for one selected trip.
 
-The plan says to skip AutoMapper for now.
+Suggested properties:
 
-This is intentional.
+```text
+Id
+RouteId
+BusId
+OriginDepotId
+OriginDepotName
+DestinationDepotId
+DestinationDepotName
+DepartureTime
+ArrivalTime
+BaseFare
+AvailableSeats
+TotalSeats
+BusModel
+```
 
-Reasons:
-- One less dependency to configure.
-- One less thing to debug.
-- Keep mapping manual and explicit.
-- Easier to understand in a short MVP sprint.
+Keep `TripDto` separate from `TripSearchResultDto` only if the detail response genuinely needs more fields. If both responses stay identical during the MVP, use one DTO rather than creating two names for the same shape.
 
-For each service, map in a straightforward way:
-- Domain entity -> DTO
-- Query result -> response DTO
+The important decision is not the class name. It is avoiding fields that no current use case needs.
 
-Do not create a configuration file or model mapping registry today. Just write the mapping as regular code in small service methods when the implementation is added.
+## 6) Decide whether DepotDto is actually needed
 
----
+Ask what the MVP client needs from depot data.
 
-## 8) Keep the architecture clean
+If the search form displays a list of depots, it needs:
 
-At the end of Day 2, your project should be organized like this:
+```text
+Id
+Name
+City or Address
+```
 
-- BusBookingSystem.Core
-  - Entities/
-  - Enums/
+That is enough for a depot selection dropdown.
 
-- BusBookingSystem.Application
-  - DTOs/
-  - Interfaces/
-    - Services/
+### 6.1 DepotDto
 
-- BusBookingSystem.Infrastructure
-  - Data/
-  - AppDbContext.cs
-  - Services/
+Purpose: populate the origin and destination choices used by trip search.
 
-- BusBookingSystem.API
-  - Controllers/
-  - Program.cs
+Suggested MVP properties:
 
-This separation matters because:
-- Core contains business concepts.
-- Application defines the use-case contracts and response DTOs.
-- Infrastructure handles data access with AppDbContext.
-- API handles HTTP endpoints.
+```text
+Id
+DepotCode
+Name
+City or Address
+IsActive
+```
 
-Day 2 is where you lock in that boundary.
+Include `Id` because the search request should submit the selected depot's ID, not its display name.
 
----
+Exclude these unless a current screen needs them:
 
-## 9) Compile check after the contract layer exists
+- `Latitude`
+- `Longitude`
+- `PhoneNumber`
+- `CreatedAt`
+- `UpdatedAt`
 
-Once the DTOs and interfaces are in place, do a build check.
+Those may matter to an operations or depot-details screen, but they are not necessary for a customer searching for a trip.
 
-The goal is not to have working endpoints yet. The goal is to verify that:
-- the Application project compiles cleanly,
-- it references Core without issue,
-- there are no missing namespaces or broken references,
-- the project is ready for Infrastructure implementation on Day 3.
+## 7) Decide whether BusDto is needed for the MVP
 
-If the build fails, fix the compile issues before moving on.
+Ask whether the application has a separate bus-list screen.
 
----
+For the 9-day MVP, the answer is probably no. The customer sees bus information as part of a trip result, so a standalone `BusDto` may not be required yet.
 
-## 10) What “done” looks like for Day 2
+Do not create `BusDto` just because a `Bus` entity exists.
 
-By the end of the day, you should be able to confidently say:
+Use bus fields directly in `TripSearchResultDto` or `TripDto`:
 
-- I defined the DTOs for depots, buses, routes, and trips.
-- I explained each DTO’s purpose and why it includes an Id.
-- I created the service interfaces for the read-side API contract.
-- I removed the repository abstraction because DbContext is the simpler and sufficient data-access layer here.
-- I clarified the Application layer boundary.
-- I kept the design simple and free of database or API code.
+```text
+BusId
+BusModel
+Capacity or available-seat information, only if displayed
+```
 
-This is the contract layer that Day 3 will build on.
+Add `BusDto` later if the API needs a real `GET /api/buses` use case for an operator or admin.
 
----
+## 8) Decide whether RouteDto is needed for the MVP
 
-## 11) Day 2 checklist
+You already created `RouteDto`. Keep it small and make its purpose explicit.
 
-Use this as a quick completion checklist:
+Purpose: return a route when the API needs to list or inspect routes separately from trips.
 
-- [ ] Core entities reviewed and confirmed
-- [ ] DTO classes created in Application/DTOs
-- [ ] DepotDto purpose explained and created
-- [ ] BusDto purpose explained and created
-- [ ] RouteDto purpose explained and created
-- [ ] TripDto purpose explained and created
-- [ ] TripSearchResultDto purpose explained and created
-- [ ] Service interfaces created
-- [ ] IDepotService created
-- [ ] IBusService created
-- [ ] ITripService created
-- [ ] AppDbContext-first design confirmed
-- [ ] No repository abstraction added
-- [ ] Build passes
-- [ ] No Infrastructure or API code added yet
+Suggested properties:
 
----
+```text
+Id
+Name
+OriginDepotId
+OriginDepotName
+DestinationDepotId
+DestinationDepotName
+```
 
-## 12) Tomorrow’s handoff to Day 3
+Exclude `CreatedAt` and `UpdatedAt` unless a current consumer needs audit information.
 
-On Day 3, you will move into Infrastructure and implement the actual data access layer:
-- Add EF Core SQL Server packages
-- Create AppDbContext
-- Add DbSets for depots, buses, routes, trips
-- Implement service classes using AppDbContext directly
-- Connect the service interfaces to actual database queries
+The route IDs and depot IDs are useful because routes and depots are separate records. The display names are useful because the client should not need another request just to render the route label.
 
-Day 2 is the contract foundation that allows Day 3 to be clean, predictable, and easy to test.
+If the MVP never has a standalone route screen, `RouteDto` may not be needed at all. The route information can remain inside the trip DTO. Keep it only if the API has a route-list or route-detail use case.
 
-Do not rush into data access without this boundary in place.
+## 9) Use the same backward process for every DTO
 
----
+For each proposed property, ask:
 
-## 4) Keep the data access boundary simple
+1. Which MVP screen or request uses this value?
+2. Is it displayed, submitted later, or needed to identify a record?
+3. Can the client perform the use case without it?
+4. Is it sensitive, internal, or only useful to the database?
+5. Would including it couple the API to implementation details?
 
-For this project, we are not using repository classes. The simpler design is:
-- Application layer defines service contracts.
-- Infrastructure layer owns AppDbContext.
-- The service implementation uses DbContext directly to query data.
+Use this decision table:
 
-This is the preferred approach unless there is a strong reason to introduce repository abstractions later.
+| Property type | MVP decision |
+|---|---|
+| Resource ID used by a later request | Include |
+| Display name shown to the user | Include |
+| Search/filter value submitted by the client | Include |
+| Price, time, and availability needed to choose a trip | Include |
+| Navigation property or nested entity | Exclude; flatten needed values |
+| `CreatedAt`/`UpdatedAt` | Exclude unless displayed or audited |
+| Internal flags | Exclude unless they affect the current use case |
+| Passwords or authentication data | Never include |
+| Future-feature data | Leave out for now |
 
-In practice, that means:
-- no IDepotRepository
-- no IBusRepository
-- no IRouteRepository
-- no ITripRepository
-- instead, the service implementation can inject AppDbContext and call DbSet queries directly
+This is how you prevent DTOs from becoming copies of entities.
 
-This keeps the codebase lighter and easier to move through in the 9-day build window.
+## 10) Define service interfaces from the same use cases
 
-The Application layer should not know about EF Core types or DbContext. It only knows the service interface contract.
+The service interfaces represent actions the Application layer promises to provide. They should be derived from API use cases, not from database tables.
 
----
+### 10.1 IDepotService
 
-## 5) Create service interfaces
+Purpose: provide the active depots needed to populate trip-search inputs.
 
-The service interfaces live under:
-- Interfaces/Services/
+MVP contract:
 
-These are the contracts the API controllers will call later.
+```text
+GetActiveAsync()
+```
 
-### 5.1 IDepotService
+Add `GetByIdAsync(Guid id)` only if the MVP has a depot-detail use case. Do not add it automatically.
 
-Define methods such as:
-- GetAllAsync()
-- GetByIdAsync(Guid id)
+### 10.2 ITripService
 
-### 5.2 IBusService
+Purpose: support the customer journey from searching for a trip to inspecting the selected trip.
 
-Define methods such as:
-- GetAllAsync()
-- GetByIdAsync(Guid id)
+MVP contract:
 
-### 5.3 ITripService
+```text
+SearchTripsAsync(Guid originDepotId, Guid destinationDepotId, DateOnly date)
+GetByIdAsync(Guid id)
+```
 
-This is the key service interface for Day 2.
+Why these methods exist:
 
-Define methods like:
-- GetAllAsync()
-- GetByIdAsync(Guid id)
-- SearchTripsAsync(Guid originDepotId, Guid destinationDepotId, DateTime date)
+- `SearchTripsAsync` supports the primary customer workflow.
+- `GetByIdAsync` supports confirmation of a selected trip and gives Day 5 a clear trip lookup boundary before booking.
 
-This is exactly the contract the API will implement later.
+Do not add update, delete, or create-trip methods yet. Those belong to an operator/admin workflow that is outside this MVP slice.
 
-### 5.4 Service responsibilities for Day 2
+### 10.3 IBusService
 
-Keep service interfaces thin and readable.
+Do not create this interface unless the MVP has a standalone bus use case.
 
-They should orchestrate the data flow, for example:
-- Service receives a request from the controller.
-- Service queries AppDbContext in Infrastructure.
-- Service maps the entity results to DTOs.
-- Controller receives the DTOs.
+If the only place bus data appears is inside trip search results, the trip service can project the few required bus fields directly. Add `IBusService` later when a real bus-list or bus-detail endpoint is needed.
 
-This is the day to define the orchestration boundary without implementing the logic.
+### 10.4 Route service
 
----
+Apply the same rule to routes. Do not create `IRouteService` solely because a `Route` entity exists.
 
-## 6) Decide whether to add service implementations yet
+Create it only if the MVP needs a standalone route operation, such as:
 
-For Day 2, the plan says: "Service interfaces + implementations: IDepotService, IBusService, ITripService — thin orchestration, manual DTO mapping (skip AutoMapper, one less thing to debug this week)."
+```text
+GetRoutesAsync()
+GetByIdAsync(Guid id)
+```
 
-That means today you can do both:
-- Create the interfaces in Application.
-- Create the implementations in Infrastructure or Application, depending on your project structure.
+If route data is only needed while searching trips, keep it inside the trip-search projection.
 
-The safe and simple version is:
-- Put service interfaces in Application.
-- Put service implementations in Infrastructure or a dedicated Application implementation folder if you prefer.
+## 11) Keep EF Core behind the service contract
 
-Since the plan explicitly says "Application layer: read-side contracts" and the work is primarily interface definition, many people keep this day focused on contracts only and defer heavy implementation to Day 3 or Day 4.
+The Application project defines DTOs and service interfaces only.
 
-If you want to keep the build clean and low-risk, do this:
-- Create interfaces only on Day 2.
-- Stub out implementation classes later if needed.
+The Infrastructure implementation may:
 
-The main requirement is the contracts exist clearly and are named correctly.
+- inject `AppDbContext`,
+- query `DbSet` properties,
+- filter by origin, destination, and date,
+- project directly into DTOs,
+- return the service contract's result.
 
----
+The API controller should depend on `ITripService` or `IDepotService`, not on `AppDbContext`.
 
-## 7) Avoid AutoMapper today
+This gives the MVP one useful boundary without adding a repository wrapper around EF Core.
 
-The plan says to skip AutoMapper for now.
+## 12) Manual mapping and projection
 
-This is intentional.
+Skip AutoMapper for this sprint. Use explicit projection so it is obvious which fields are returned.
 
-Reasons:
-- One less dependency to configure.
-- One less thing to debug.
-- Keep mapping manual and explicit.
-- Easier to understand in a short MVP sprint.
+Conceptually, a trip search query should select only the fields in `TripSearchResultDto`, rather than loading complete entity graphs and exposing them.
 
-For each service, map in a straightforward way:
-- Domain entity -> DTO
-- Repository result -> output DTO
+This keeps responses smaller and makes the DTO decision visible in the code.
 
-Do not create a configuration file or model mapping registry today. Just write the mapping as regular code in small service methods when the implementation is added.
+## 13) Day 2 implementation checklist
 
----
+- [ ] Write down the MVP customer trip-search journey
+- [ ] Identify the fields required to choose a trip
+- [ ] Keep `RouteDto` limited to its actual route use case
+- [ ] Create `DepotDto` only for depot selection data
+- [ ] Create `TripSearchResultDto` for the primary search response
+- [ ] Create `TripDto` only if selected-trip detail needs a different shape
+- [ ] Skip `BusDto` unless a standalone bus use case exists
+- [ ] Skip route or bus service interfaces unless their own use cases exist
+- [ ] Create `IDepotService` around active-depot lookup
+- [ ] Create `ITripService` around search and selected-trip lookup
+- [ ] Keep IDs required for later requests and selection
+- [ ] Exclude audit, internal, nested, and future-feature fields
+- [ ] Use no repository interfaces or repository classes
+- [ ] Confirm Application references Core only
+- [ ] Build the Application project
 
-## 8) Keep the architecture clean
+## 14) Day 3 handoff
 
-At the end of Day 2, your project should be organized like this:
+Day 3 will implement the contracts that survived this use-case review:
 
-- BusBookingSystem.Core
-  - Entities/
-  - Enums/
+- add EF Core SQL Server packages,
+- create `AppDbContext`,
+- add the required `DbSet` properties,
+- implement the depot and trip services with direct DbContext queries,
+- project query results into the focused DTOs.
 
-- BusBookingSystem.Application
-  - DTOs/
-  - Interfaces/
-    - Services/
-
-- BusBookingSystem.Infrastructure
-  - Data/
-  - AppDbContext.cs
-  - Services/
-
-- BusBookingSystem.API
-  - Controllers/
-  - Program.cs
-
-This separation matters because:
-- Core contains business concepts.
-- Application defines use cases and contracts.
-- Infrastructure does storage and implementation.
-- API handles HTTP endpoints.
-
-Day 2 is where you lock in that boundary.
-
----
-
-## 9) Compile check after the contract layer exists
-
-Once the DTOs and interfaces are in place, do a build check.
-
-The goal is not to have working endpoints yet. The goal is to verify that:
-- the Application project compiles cleanly,
-- it references Core without issue,
-- there are no missing namespaces or broken references,
-- the project is ready for Infrastructure implementation on Day 3.
-
-If the build fails, fix the compile issues before moving on.
-
----
-
-## 10) What “done” looks like for Day 2
-
-By the end of the day, you should be able to confidently say:
-
-- I defined the DTOs for depots, buses, routes, and trips.
-- I created the repository contracts for read-side access.
-- I created the service contracts for trip search and retrieval.
-- I clarified the Application layer boundary.
-- I kept the design simple and free of database or API code.
-
-This is the contract layer that Day 3 will build on.
-
----
-
-## 11) Day 2 checklist
-
-Use this as a quick completion checklist:
-
-- [ ] Core entities reviewed and confirmed
-- [ ] DTO classes created in Application/DTOs
-- [ ] DepotDto created
-- [ ] BusDto created
-- [ ] RouteDto created
-- [ ] TripDto created
-- [ ] TripSearchResultDto created
-- [ ] Service interfaces created
-- [ ] IDepotService created
-- [ ] IBusService created
-- [ ] ITripService created
-- [ ] AppDbContext approach confirmed instead of repository classes
-- [ ] Build passes
-- [ ] No Infrastructure or API code added yet
-
----
-
-## 12) Tomorrow’s handoff to Day 3
-
-On Day 3, you will move into Infrastructure and implement the actual data access layer:
-- Add EF Core SQL Server packages
-- Create AppDbContext
-- Add DbSets for depots, buses, routes, trips
-- Implement repository classes
-- Connect the repository interfaces to actual database queries
-
-Day 2 is the contract foundation that allows Day 3 to be clean, predictable, and easy to test.
-
-Do not rush into data access without this boundary in place.
+If a DTO or interface cannot be connected to a current MVP use case, leave it out until a real requirement appears.
