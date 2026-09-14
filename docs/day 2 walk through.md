@@ -1,374 +1,571 @@
-# Day 2 Walkthrough - Application Contracts From MVP Use Cases
+# Day 2 Walkthrough - Depot Choices End to End
 
-This is the day 2 implementation pass for the 9-day MVP plan.
+Day 2 is the first vertical feature slice.
 
-The guiding rule for today is:
+The goal is to complete one small customer feature from idea to working API:
 
-> Start with what the user must do, then define only the data and service methods needed to support it.
+```text
+User story
+  -> acceptance criteria
+  -> use case
+  -> DTO and service interface
+  -> database access
+  -> API endpoint
+  -> manual verification
+```
 
-Do not copy every entity property into every DTO. Do not create contracts for features that are not part of this MVP.
+You are not expected to know the next step from memory. Follow this document in order. After each major step, there is a checkpoint explaining what should now exist and what result should confirm that it is working.
 
-## 1) Define the MVP read-side use cases
+## 1. Understand the feature before coding
 
-The read-side of this bus booking MVP needs to support this basic journey:
+### User story
 
-1. A customer chooses an origin depot, destination depot, and travel date.
-2. The system returns matching trips.
-3. The customer selects one trip.
-4. The system returns enough detail to confirm the selected trip before booking.
-5. Later, Day 5 uses the selected trip ID when creating a booking.
+> As a customer, I want to see active depots so that I can choose an origin and destination when searching for a trip.
 
-That journey determines what Day 2 needs to define.
+This feature is deliberately narrow. A customer will eventually need depot choices for the trip-search form, but today we are only building the endpoint that supplies those choices.
 
-For now, do not design for:
+Do not build these features today:
 
-- admin dashboards,
-- bus maintenance screens,
-- editing depots,
+- trip search,
+- bus listing,
+- route management,
+- booking,
 - payments,
-- cancellation workflows,
-- passenger management,
-- reporting,
-- route planning beyond origin and destination.
+- authentication.
 
-Those may be valid future features, but they should not make today's contracts larger.
+Those are separate vertical slices on later days.
 
-## 2) Confirm the domain foundation
+### Acceptance criteria
 
-Before creating Application contracts, confirm the Core layer contains the concepts needed by the journey:
+The feature is complete when all of the following are true:
 
-- `Depot`
-- `Bus`
+- `GET /api/depots` exists.
+- It returns active depots.
+- It does not return inactive depots.
+- Each item contains an ID and the display values needed by a search form.
+- It does not return the full `Depot` entity or its navigation objects.
+- The controller calls a service rather than querying the database itself.
+- The service uses `AppDbContext` directly in Infrastructure.
+- The Infrastructure service accesses the database through `AppDbContext`.
+- Swagger can call the endpoint and show the result.
+
+## 2. Confirm the current project structure
+
+Before adding anything, check that the solution contains these projects:
+
+```text
+BusBookingSystem.Core
+BusBookingSystem.Application
+BusBookingSystem.Infrastructure
+BusBookingSystem.API
+```
+
+The dependency direction should be:
+
+```text
+Core <- Application <- Infrastructure <- API
+```
+
+For this feature, the responsibilities are:
+
+- **Core:** contains the `Depot` entity.
+- **Application:** contains `DepotListDto` and `IDepotService`.
+- **Infrastructure:** contains `AppDbContext` and the concrete depot service.
+- **API:** contains `DepotsController`.
+
+If `AppDbContext` does not exist yet, this walkthrough creates the minimum one needed for depots. Do not try to finish the entire database model before getting this feature working.
+
+### Checkpoint
+
+You should be able to explain where each part will live before creating it. If you cannot, stop and use the responsibility list above as the guide.
+
+## 3. Confirm the Depot entity fields
+
+Open the existing Depot entity in:
+
+```text
+BusBookingSystem.Core/Entities/Depot.cs
+```
+
+Identify the fields that are useful to a customer choosing a depot. In the current model, these include values such as:
+
+- `Id`
+- `DepotCode`
+- `Name`
 - `Address`
-- `Route`
-- `Trip`
-- `Booking`
-- `User`
-- `UserType`
-- `BookingStatus`
+- `IsActive`
 
-The domain entities are the source of data, but they are not automatically the API response shape.
+The `Address` is a navigation/property object, so do not expose it directly from the DTO. Decide which simple display value should be returned from it, such as a city or formatted address, based on the fields that exist in the `Address` entity.
 
-The Application layer will select the fields needed by each use case and map entity data into DTOs.
+Do not copy every Depot property into the response. The customer does not need audit timestamps, coordinates, or phone details merely to choose an origin or destination.
 
-## 3) Create the Application structure
+### Checkpoint
 
-Use this structure:
-
-```text
-BusBookingSystem.Application/
-  DTOs/
-  Interfaces/
-    Services/
-```
-
-The Application project should reference Core. It should not reference Infrastructure or the API project.
-
-Do not add repository interfaces or repository classes. Infrastructure will use `AppDbContext` directly inside the service implementations. A custom repository would add another wrapper around the EF Core abstraction without helping this small MVP.
-
-## 4) Work backward from the trip-search screen
-
-Imagine the eventual request:
-
-```text
-GET /api/trips/search?originDepotId=...&destinationDepotId=...&date=...
-```
-
-The user needs to compare results and select one. Therefore each result must contain:
-
-- the selected trip's `Id`,
-- enough route information to know where it goes,
-- departure and arrival times,
-- the price,
-- remaining availability,
-- enough bus information to make the result useful.
-
-It does not need database audit timestamps, the complete Bus entity, the complete Route entity, or nested entity objects.
-
-### 4.1 TripSearchResultDto
-
-Purpose: one row in the trip-search response.
-
-Suggested properties:
-
-```text
-TripId
-RouteId
-OriginDepotId
-OriginDepotName
-DestinationDepotId
-DestinationDepotName
-DepartureTime
-ArrivalTime
-BaseFare
-AvailableSeats
-BusModel
-```
-
-Why the IDs are included:
-
-- `TripId` is required when the customer selects a trip and later creates a booking.
-- `RouteId` identifies the route if the API later needs to link to route details.
-- Depot IDs identify the selected origin and destination without requiring the client to match names.
-
-Why other entity fields are excluded:
-
-- The search screen does not need every bus property.
-- It does not need `CreatedAt` or `UpdatedAt`.
-- It does not need nested `Bus`, `Route`, or `Depot` objects.
-- It does not need internal persistence details.
-
-For the MVP, this is the most important DTO. Build it from the search screen's needs first.
-
-## 5) Work backward from the selected-trip detail
-
-After a customer selects a search result, the API may return a trip detail response before the booking request is submitted.
-
-Ask: what must the customer confirm?
-
-- Which trip was selected?
-- Which bus is operating it?
-- Which route is being travelled?
-- When does it leave and arrive?
-- What does it cost?
-- How many seats remain?
-
-### 5.1 TripDto
-
-Purpose: details for one selected trip.
-
-Suggested properties:
-
-```text
-Id
-RouteId
-BusId
-OriginDepotId
-OriginDepotName
-DestinationDepotId
-DestinationDepotName
-DepartureTime
-ArrivalTime
-BaseFare
-AvailableSeats
-TotalSeats
-BusModel
-```
-
-Keep `TripDto` separate from `TripSearchResultDto` only if the detail response genuinely needs more fields. If both responses stay identical during the MVP, use one DTO rather than creating two names for the same shape.
-
-The important decision is not the class name. It is avoiding fields that no current use case needs.
-
-## 6) Decide whether DepotDto is actually needed
-
-Ask what the MVP client needs from depot data.
-
-If the search form displays a list of depots, it needs:
-
-```text
-Id
-Name
-City or Address
-```
-
-That is enough for a depot selection dropdown.
-
-### 6.1 DepotDto
-
-Purpose: populate the origin and destination choices used by trip search.
-
-Suggested MVP properties:
+Write down the response fields before coding the service:
 
 ```text
 Id
 DepotCode
 Name
-City or Address
-IsActive
+DisplayLocation
 ```
 
-Include `Id` because the search request should submit the selected depot's ID, not its display name.
+Use the actual property name you choose, such as `City` or `Address`, consistently in the DTO and projection. The important part is that it is a simple display value, not a nested entity.
 
-Exclude these unless a current screen needs them:
+## 4. Confirm the DTO purpose and shape
 
-- `Latitude`
-- `Longitude`
-- `PhoneNumber`
-- `CreatedAt`
-- `UpdatedAt`
+You renamed the DTO to `DepotListDto`. Keep that name. It communicates that this DTO is designed for a list response, not a full depot detail response.
 
-Those may matter to an operations or depot-details screen, but they are not necessary for a customer searching for a trip.
+Its purpose is:
 
-## 7) Decide whether BusDto is needed for the MVP
+> Return the minimum information needed to populate the origin and destination dropdowns in the future trip-search screen.
 
-Ask whether the application has a separate bus-list screen.
+A suitable shape is:
 
-For the 9-day MVP, the answer is probably no. The customer sees bus information as part of a trip result, so a standalone `BusDto` may not be required yet.
+```csharp
+namespace BusBookingSystem.Application.DTOs
+{
+    public class DepotListDto
+    {
+        public Guid Id { get; set; }
+        public string DepotCode { get; set; } = null!;
+        public string Name { get; set; } = null!;
+        public string DisplayLocation { get; set; } = null!;
+    }
+}
+```
 
-Do not create `BusDto` just because a `Bus` entity exists.
+Use your chosen display property name if your current DTO differs. Do not add fields just because they exist on `Depot`.
 
-Use bus fields directly in `TripSearchResultDto` or `TripDto`:
+Why `Id` is included:
+
+- the customer sees `Name` and the display location,
+- the client submits `Id` later when searching for trips,
+- names are display text and are not reliable identifiers.
+
+Why the entity itself is not returned:
+
+- returning entities couples the API to the database model,
+- navigation properties can expose too much data,
+- the list response should remain small and intentional.
+
+### Action
+
+Create or update the file:
 
 ```text
-BusId
-BusModel
-Capacity or available-seat information, only if displayed
+BusBookingSystem.Application/DTOs/DepotListDto.cs
 ```
 
-Add `BusDto` later if the API needs a real `GET /api/buses` use case for an operator or admin.
+Make sure its namespace matches the other DTOs in the Application project.
 
-## 8) Decide whether RouteDto is needed for the MVP
+### Checkpoint
 
-You already created `RouteDto`. Keep it small and make its purpose explicit.
+Build the Application project. The DTO should compile before you continue. If it does not, fix the namespace or project-reference problem now; later steps depend on this type.
 
-Purpose: return a route when the API needs to list or inspect routes separately from trips.
+## 5. Define the service contract
 
-Suggested properties:
+The API controller should not know how depots are stored. It should ask a service for the data it needs.
+
+Create or update:
 
 ```text
-Id
-Name
-OriginDepotId
-OriginDepotName
-DestinationDepotId
-DestinationDepotName
+BusBookingSystem.Application/Interfaces/Services/IDepotService.cs
 ```
 
-Exclude `CreatedAt` and `UpdatedAt` unless a current consumer needs audit information.
+The interface should represent the user story:
 
-The route IDs and depot IDs are useful because routes and depots are separate records. The display names are useful because the client should not need another request just to render the route label.
+```csharp
+using BusBookingSystem.Application.DTOs;
 
-If the MVP never has a standalone route screen, `RouteDto` may not be needed at all. The route information can remain inside the trip DTO. Keep it only if the API has a route-list or route-detail use case.
+namespace BusBookingSystem.Application.Interfaces.Services
+{
+    public interface IDepotService
+    {
+        Task<IReadOnlyList<DepotListDto>> GetActiveDepotsAsync();
+    }
+}
+```
 
-## 9) Use the same backward process for every DTO
+Your existing project style may use a different collection type. The important parts are:
 
-For each proposed property, ask:
+- the method is asynchronous,
+- the method name is `GetActiveDepotsAsync`,
+- it returns `DepotListDto` values,
+- it does not return `Depot` entities,
+- it does not expose `AppDbContext` or EF Core types.
 
-1. Which MVP screen or request uses this value?
-2. Is it displayed, submitted later, or needed to identify a record?
-3. Can the client perform the use case without it?
-4. Is it sensitive, internal, or only useful to the database?
-5. Would including it couple the API to implementation details?
+### Why this method exists
 
-Use this decision table:
+`GetActiveDepotsAsync` exists because the user story needs active depot choices. It is not a generic database method.
 
-| Property type | MVP decision |
-|---|---|
-| Resource ID used by a later request | Include |
-| Display name shown to the user | Include |
-| Search/filter value submitted by the client | Include |
-| Price, time, and availability needed to choose a trip | Include |
-| Navigation property or nested entity | Exclude; flatten needed values |
-| `CreatedAt`/`UpdatedAt` | Exclude unless displayed or audited |
-| Internal flags | Exclude unless they affect the current use case |
-| Passwords or authentication data | Never include |
-| Future-feature data | Leave out for now |
+Do not add these methods yet:
 
-This is how you prevent DTOs from becoming copies of entities.
+- `GetAllAsync`, because the customer should not receive inactive choices,
+- `GetByIdAsync`, because there is no depot-detail user story,
+- `CreateAsync`, `UpdateAsync`, or `DeleteAsync`, because depot administration is outside this MVP slice.
 
-## 10) Define service interfaces from the same use cases
+### Checkpoint
 
-The service interfaces represent actions the Application layer promises to provide. They should be derived from API use cases, not from database tables.
+Build the Application project again. At this point, Application should contain a DTO and a service contract, but no EF Core code.
 
-### 10.1 IDepotService
+## 6. Check whether Infrastructure already has AppDbContext
 
-Purpose: provide the active depots needed to populate trip-search inputs.
-
-MVP contract:
+Look in:
 
 ```text
-GetActiveAsync()
+BusBookingSystem.Infrastructure
 ```
 
-Add `GetByIdAsync(Guid id)` only if the MVP has a depot-detail use case. Do not add it automatically.
+Search for a class named `AppDbContext` or a class inheriting from `DbContext`.
 
-### 10.2 ITripService
+### If AppDbContext already exists
 
-Purpose: support the customer journey from searching for a trip to inspecting the selected trip.
+Open it and check whether it has a depot set similar to:
 
-MVP contract:
+```csharp
+public DbSet<Depot> Depots { get; set; }
+```
+
+If the set exists, do not create a second context. Use the existing one and continue to the service implementation.
+
+### If AppDbContext does not exist
+
+Create the minimum Infrastructure database setup needed for this slice:
+
+1. Add the EF Core SQL Server package to Infrastructure.
+2. Add the EF Core design/tools package where your solution expects it.
+3. Create `AppDbContext` inheriting from `DbContext`.
+4. Add a `DbSet<Depot>` property.
+5. Add a constructor accepting `DbContextOptions<AppDbContext>`.
+6. Add the depot key and required-field configuration if conventions are not enough.
+
+The context belongs in Infrastructure because EF Core is an implementation detail. Application should not reference it.
+
+### Checkpoint
+
+Infrastructure should compile and `AppDbContext` should expose exactly one depot set.
+
+## 7. Configure the database connection
+
+Open the API configuration file:
 
 ```text
-SearchTripsAsync(Guid originDepotId, Guid destinationDepotId, DateOnly date)
-GetByIdAsync(Guid id)
+BusBookingSystem.API/appsettings.json
 ```
 
-Why these methods exist:
+Add or confirm a development connection string for SQL Server. Use the connection-string name that your `Program.cs` will register, for example:
 
-- `SearchTripsAsync` supports the primary customer workflow.
-- `GetByIdAsync` supports confirmation of a selected trip and gives Day 5 a clear trip lookup boundary before booking.
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "your-development-sql-server-connection-string"
+  }
+}
+```
 
-Do not add update, delete, or create-trip methods yet. Those belong to an operator/admin workflow that is outside this MVP slice.
+Do not commit real passwords or production secrets. For local development, use the SQL Server instance available on your machine.
 
-### 10.3 IBusService
-
-Do not create this interface unless the MVP has a standalone bus use case.
-
-If the only place bus data appears is inside trip search results, the trip service can project the few required bus fields directly. Add `IBusService` later when a real bus-list or bus-detail endpoint is needed.
-
-### 10.4 Route service
-
-Apply the same rule to routes. Do not create `IRouteService` solely because a `Route` entity exists.
-
-Create it only if the MVP needs a standalone route operation, such as:
+Then register the context in the API startup code. The registration should conceptually do this:
 
 ```text
-GetRoutesAsync()
-GetByIdAsync(Guid id)
+Read DefaultConnection
+  -> configure SQL Server
+  -> register AppDbContext with dependency injection
 ```
 
-If route data is only needed while searching trips, keep it inside the trip-search projection.
+The exact registration belongs in the API because the API is the application entry point, while the context type remains in Infrastructure.
 
-## 11) Keep EF Core behind the service contract
+### Checkpoint
 
-The Application project defines DTOs and service interfaces only.
+Start the API or run the application build. If the connection string name, project reference, or provider package is wrong, fix that before migrations.
 
-The Infrastructure implementation may:
+## 8. Create the database schema and seed data
+
+Once the context and connection are configured:
+
+1. Create the initial migration for the current model.
+2. Apply the migration to the development database.
+3. Add a few active depots.
+4. Add at least one inactive depot.
+5. Confirm the database contains the expected rows.
+
+The seed data should make the acceptance criteria testable. For example:
+
+```text
+DEPOT-001 - Active
+DEPOT-002 - Active
+DEPOT-003 - Inactive
+```
+
+The exact names do not matter. Having both active and inactive records does.
+
+If you do not yet have a seed mechanism, insert development rows using the approach already used by the project. Keep this data clearly development-only.
+
+### Checkpoint
+
+You should be able to inspect the database and see active and inactive depot rows. If the database is empty, the endpoint cannot prove that its filtering works.
+
+## 9. Implement the concrete depot service
+
+Create the service implementation in Infrastructure, for example:
+
+```text
+BusBookingSystem.Infrastructure/Services/DepotService.cs
+```
+
+The class should:
+
+1. Implement `IDepotService`.
+2. Inject `AppDbContext` through its constructor.
+3. Query `context.Depots`.
+4. Filter to `IsActive` rows.
+5. Project only the fields required by `DepotListDto`.
+6. Execute the query asynchronously.
+7. Return the list.
+
+The data flow should look like this:
+
+```text
+AppDbContext.Depots
+  -> Where(IsActive)
+  -> Select(DepotListDto fields)
+  -> ToListAsync()
+  -> return to controller
+```
+
+Do not do these things:
+
+- return `Depot` entities,
+- return the `Address` navigation object,
+- load every property and map everything automatically,
+- put the query in the controller.
+
+The mapping should be explicit so you can see exactly why every response field exists.
+
+### Handling the address display value
+
+Your current `Depot` model contains an `Address` property. The DTO needs a string display value. Choose the appropriate field from `Address` and project it into `DisplayLocation` or your chosen property.
+
+If the address model is not ready yet, use the simplest display value available for this slice and record the limitation. Do not expand the DTO with the entire address object just to avoid deciding on one display field.
+
+### Checkpoint
+
+Build Infrastructure. The service should compile against the Application interface and Core entity, using `AppDbContext` for data access.
+
+## 10. Register the service with dependency injection
+
+Open the API startup file:
+
+```text
+BusBookingSystem.API/Program.cs
+```
+
+Register the interface and its Infrastructure implementation:
+
+```text
+IDepotService -> DepotService
+```
+
+Use the lifetime already chosen for your other application services. For a service that uses a scoped EF Core context, a scoped service is the normal choice.
+
+The registration matters because the controller will request `IDepotService`, while dependency injection must know which concrete class to create.
+
+### Checkpoint
+
+Run the API. If startup fails with “unable to resolve service,” check:
+
+- the Application project references,
+- the Infrastructure project reference,
+- the namespace in the registration,
+- the service constructor dependencies,
+- the `AppDbContext` registration.
+
+Do not bypass the problem by injecting `AppDbContext` into the controller. The controller should remain dependent on the service contract.
+
+## 11. Create the controller endpoint
+
+Create:
+
+```text
+BusBookingSystem.API/Controllers/DepotsController.cs
+```
+
+The controller should:
+
+1. Be an API controller.
+2. Use the route `api/[controller]` or the project convention.
+3. Inject `IDepotService`.
+4. Add a `GET` action.
+5. Call `GetActiveDepotsAsync()`.
+6. Return the resulting list.
+
+The request flow should now be:
+
+```text
+HTTP GET /api/depots
+  -> DepotsController
+  -> IDepotService.GetActiveDepotsAsync()
+  -> DepotService
+  -> AppDbContext
+  -> DepotListDto list
+  -> JSON response
+```
+
+The controller should not:
 
 - inject `AppDbContext`,
-- query `DbSet` properties,
-- filter by origin, destination, and date,
-- project directly into DTOs,
-- return the service contract's result.
+- contain `Where` or `Select` database queries,
+- return `Depot` entities,
+- decide which depots are active.
 
-The API controller should depend on `ITripService` or `IDepotService`, not on `AppDbContext`.
+### Checkpoint
 
-This gives the MVP one useful boundary without adding a repository wrapper around EF Core.
+Build and run the API. Swagger should list `GET /api/depots`. If it does not appear, check that the controller has the correct attributes and is in the API project.
 
-## 12) Manual mapping and projection
+## 12. Test the feature manually in Swagger
 
-Skip AutoMapper for this sprint. Use explicit projection so it is obvious which fields are returned.
+Open the Swagger URL shown by the API when it starts.
 
-Conceptually, a trip search query should select only the fields in `TripSearchResultDto`, rather than loading complete entity graphs and exposing them.
+Find `GET /api/depots` and execute it.
 
-This keeps responses smaller and makes the DTO decision visible in the code.
+### Test 1: active records
 
-## 13) Day 2 implementation checklist
+Expected result:
 
-- [ ] Write down the MVP customer trip-search journey
-- [ ] Identify the fields required to choose a trip
-- [ ] Keep `RouteDto` limited to its actual route use case
-- [ ] Create `DepotDto` only for depot selection data
-- [ ] Create `TripSearchResultDto` for the primary search response
-- [ ] Create `TripDto` only if selected-trip detail needs a different shape
-- [ ] Skip `BusDto` unless a standalone bus use case exists
-- [ ] Skip route or bus service interfaces unless their own use cases exist
-- [ ] Create `IDepotService` around active-depot lookup
-- [ ] Create `ITripService` around search and selected-trip lookup
-- [ ] Keep IDs required for later requests and selection
-- [ ] Exclude audit, internal, nested, and future-feature fields
-- [ ] Use no repository interfaces or repository classes
-- [ ] Confirm Application references Core only
-- [ ] Build the Application project
+- HTTP success response,
+- active depots are present,
+- each item has an ID, code, name, and display value.
 
-## 14) Day 3 handoff
+### Test 2: inactive records
 
-Day 3 will implement the contracts that survived this use-case review:
+Expected result:
 
-- add EF Core SQL Server packages,
-- create `AppDbContext`,
-- add the required `DbSet` properties,
-- implement the depot and trip services with direct DbContext queries,
-- project query results into the focused DTOs.
+- the inactive seeded depot does not appear.
 
-If a DTO or interface cannot be connected to a current MVP use case, leave it out until a real requirement appears.
+If it appears, the filtering is either missing or being applied to the wrong property.
+
+### Test 3: no active records
+
+Temporarily use a database state with no active depots, or add a test setup that creates that state.
+
+Expected result:
+
+```json
+[]
+```
+
+An empty result is a valid search-form state. It should not be treated as a server failure.
+
+### Test 4: response shape
+
+Inspect the JSON response.
+
+Confirm that it contains only the fields in `DepotListDto`. It should not contain:
+
+- the full `Address` object,
+- EF navigation properties,
+- audit fields that were not selected,
+- unrelated entity fields.
+
+## 13. Add focused automated tests
+
+If a test project already exists, add tests for this feature there.
+
+If it does not exist yet, do not get stuck creating a complete testing architecture today. Record these cases and verify the feature manually through Swagger. The 9-day plan reserves Day 8 for creating and expanding the automated test suite.
+
+When the test project is available, add tests for real behavior:
+
+1. `GetActiveDepotsAsync` returns active depots.
+2. `GetActiveDepotsAsync` excludes inactive depots.
+3. No active depots returns an empty collection.
+4. The projection maps the expected ID and display values.
+
+Use the database-testing approach chosen for this solution. The test should exercise active filtering and DTO projection, rather than merely checking that an internal method was called.
+
+### Checkpoint
+
+At least the manual acceptance criteria must pass today. Automated tests can be added on Day 8 if the test project is not ready yet, but the cases must be written down so they are not forgotten.
+
+## 14. Troubleshooting guide
+
+### The service cannot be resolved
+
+Check that:
+
+- `IDepotService` is registered,
+- `DepotService` implements the exact interface,
+- the API references Infrastructure,
+- the constructor dependencies are registered.
+
+### The table does not exist
+
+The migration was probably not created or applied. Check the migration command, connection string, and database name.
+
+### The endpoint returns an empty list unexpectedly
+
+Check:
+
+- the connection string points to the database you seeded,
+- seed data was actually inserted,
+- `IsActive` is true for the expected rows,
+- the query is using the correct context.
+
+### The address projection fails
+
+Check the actual `Address` entity property names. Use a simple scalar address field for this list response rather than returning the navigation object.
+
+### Swagger does not show the endpoint
+
+Check the controller namespace, controller name, API attributes, route, and whether the API project builds successfully.
+
+## 15. Day 2 completion checkpoint
+
+Day 2 is complete when you can demonstrate this exact path:
+
+```text
+Run API
+  -> open Swagger
+  -> execute GET /api/depots
+  -> see active depot choices
+  -> confirm inactive depots are hidden
+  -> inspect the focused DepotListDto response
+  -> confirm the service, not the controller, queried the data
+  -> record the automated test cases for Day 8 if the test project is not ready
+```
+
+The completed slice should leave behind:
+
+- `DepotListDto` in Application,
+- `IDepotService.GetActiveDepotsAsync()` in Application,
+- a concrete `DepotService` in Infrastructure,
+- direct `AppDbContext` access in that service,
+- `DepotsController` in API,
+- development seed data,
+- manual Swagger verification,
+- focused test cases, automated now or scheduled for Day 8.
+
+That is the definition of done for this day.
+
+## 16. Handoff to Day 3
+
+Day 3 uses the depot IDs returned by this endpoint.
+
+The next user story is:
+
+> As a customer, I want to search for trips between two depots on a date so that I can choose a journey.
+
+Day 3 will repeat the same workflow:
+
+```text
+User story
+  -> acceptance criteria
+  -> use case
+  -> TripSearchResultDto
+  -> ITripService.SearchTripsAsync(...)
+  -> AppDbContext query
+  -> TripsController
+  -> Swagger and automated tests
+```
+
+Do not begin Day 3 until you can call `GET /api/depots` and explain what each layer contributed to the working feature.

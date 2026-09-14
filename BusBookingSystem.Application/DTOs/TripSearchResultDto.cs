@@ -1,24 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿
 namespace BusBookingSystem.Application.DTOs
 {
-    public class TripDto
+    public class TripSearchResultDto
     {
-        public Guid Id { get; set; }
+        public Guid TripId { get; set; }
         public Guid RouteId { get; set; }
-        public Guid BusId { get; set; }
+        //public Guid BusId { get; set; }
         public string BusName { get; set; } = null!;
-        public Guid OriginId { get; set; }
+        //public Guid OriginId { get; set; }
         public string OriginName { get; set; } = null!;
-        public Guid DestinationId { get; set; }
+        //public Guid DestinationId { get; set; }
         public string DestinationName { get; set; } = null!;
         public DateTime DepartureTime { get; set; }
         public DateTime? ArrivalTime { get; set; }
         public decimal BaseFare { get; set; }
         public int AvailableSeats { get; set; }
-        public int TotalSeats { get; set; }
-
     }
 }
