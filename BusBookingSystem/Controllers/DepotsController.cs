@@ -1,5 +1,7 @@
-﻿using BusBookingSystem.Application.Interfaces.Services;
-using Microsoft.AspNetCore.Http;
+﻿/* This file 
+ */
+
+using BusBookingSystem.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BusBookingSystem.API.Controllers
@@ -11,7 +13,7 @@ namespace BusBookingSystem.API.Controllers
         private readonly IDepotService _depotService = depotService;
 
         [HttpGet]
-        public async Task<IActionResult> GetAllDepots()
+        public async Task<IActionResult> GetActiveDepots()
         {
             var depots = await _depotService.GetActiveDepotsAsync();
             return Ok(depots);

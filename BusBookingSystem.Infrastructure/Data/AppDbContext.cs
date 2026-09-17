@@ -1,11 +1,19 @@
-﻿using BusBookingSystem.Core.Entities;
+﻿/* This file
+ */
+
+using BusBookingSystem.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BusBookingSystem.Infrastructure.Data
 {
     public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
     {
+        // 
         public DbSet<Depot> Depots { get; set; }
+        public DbSet<Trip> Trips { get; set; }
+        public DbSet<Bus> Buses { get; set; }
+        public DbSet<Route> Routes { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

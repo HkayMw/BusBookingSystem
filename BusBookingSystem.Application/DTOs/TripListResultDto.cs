@@ -1,0 +1,23 @@
+﻿
+namespace BusBookingSystem.Application.DTOs
+{
+    public class TripListResultDto
+    {
+        public Guid TripId { get; set; }
+        //public Guid RouteId { get; set; }
+        //public Guid BusId { get; set; }
+        public string Bus { get; set; } = null!; 
+        //public Guid OriginId { get; set; }
+        public string OriginName { get; set; } = null!;
+        public string DestinationName { get; set; } = null!;
+        public DateTimeOffset DepartureTime { get; set; }
+        public DateTimeOffset? ArrivalTime { get; set; }
+        public decimal SeatFare { get; set; }
+        public decimal? CargoFare { get; set; }
+        public int TotalSeats { get; set; }
+        public int AvailableSeats { get; set; }
+        public bool HasCargoSpace { get; set; }
+        public int TotalCargoCapacity { get; set; }
+        public int AvailableCargoCapacity { get; set; }
+    }
+}

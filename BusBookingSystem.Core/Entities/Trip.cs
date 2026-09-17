@@ -3,11 +3,15 @@
     public class Trip
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public required Bus Bus { get; set; }
-        public required Route Route { get; set; }
-        public required decimal BaseFare { get; set; }
+        public Guid BusId { get; set; }
+        public Bus Bus { get; set; } = null!;
+        public Guid RouteId { get; set; }
+        public Route Route { get; set; } = null!;
+        public required decimal SeatFare { get; set; }
+        public decimal? CargoFare { get; set; }
         public int SeatsBooked { get; set; } = 0;
-        public byte[]? RowVersion { get; set; }
+        public int CargoCapacityBooked { get; set; } = 0;
+        public byte[] RowVersion { get; set; } = null!;
         public required DateTimeOffset DepartureTime { get; set; }
         public DateTimeOffset? ArrivalTime { get; set; }
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;

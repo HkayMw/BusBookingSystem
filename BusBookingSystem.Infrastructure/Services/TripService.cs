@@ -1,0 +1,96 @@
+﻿/* This file defines a TripService class that implements the ITripService interface. 
+   It is intended to provide methods for managing trips in the Bus Booking System application.
+*/
+
+using BusBookingSystem.Application.DTOs;
+using BusBookingSystem.Application.Interfaces.Services;
+using BusBookingSystem.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace BusBookingSystem.Infrastructure.Services
+{
+    public class TripService : ITripService
+    {
+        private readonly AppDbContext _context;
+
+        public TripService(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<IReadOnlyList<TripListResultDto>> GetAllTripsAsync()
+        {
+            var trips = await _context.Trips
+                .Select(t => new TripListResultDto
+                {
+                    TripId = t.Id,
+                    Bus = t.Bus.FleetNumber,
+                    OriginName = t.Route.Origin.Name,
+                    DestinationName = t.Route.Destination.Name,
+                    DepartureTime = t.DepartureTime,
+                    ArrivalTime = t.ArrivalTime,
+                    SeatFare = t.SeatFare,
+                    CargoFare = t.CargoFare,
+                    TotalSeats = t.Bus.NumberOfSeats,
+                    AvailableSeats = t.Bus.NumberOfSeats - t.SeatsBooked,
+                    HasCargoSpace = t.Bus.HasCargoSpace,
+                    TotalCargoCapacity = t.Bus.CargoCapacity,
+                    AvailableCargoCapacity = t.Bus.CargoCapacity - t.CargoCapacityBooked
+                }).AsNoTracking().ToListAsync();
+
+            return trips;
+        }
+
+        public async Task<IReadOnlyList<TripListResultDto>> SearchTripAsync(Guid originDepotId, Guid destinationDepotId, DateOnly departureDate)
+        {
+            // validate input parameters
+
+            if (originDepotId == Guid.Empty)
+            {
+                throw new ArgumentException("Origin depot ID cannot be empty.", nameof(originDepotId));
+            }
+
+            if (destinationDepotId == Guid.Empty)
+            {
+                throw new ArgumentException("Destination depot ID cannot be empty.", nameof(destinationDepotId));
+            }
+
+            if (originDepotId == destinationDepotId)
+            {
+                throw new ArgumentException("Origin and destination depot IDs cannot be the same.");
+            }
+
+            if (departureDate == DateOnly.MinValue)
+            {
+                throw new ArgumentException("Departure date cannot be empty.", nameof(departureDate));
+            }
+
+
+
+
+
+            var trips = await _context.Trips
+                .Where(t => t.Route.OriginId == originDepotId &&
+                            t.Route.DestinationId == destinationDepotId &&
+                            t.DepartureTime.Date == departureDate.ToDateTime(TimeOnly.MinValue).Date)
+                .Select(t => new TripListResultDto
+                {
+                    TripId = t.Id,
+                    Bus = t.Bus.FleetNumber,
+                    OriginName = t.Route.Origin.Name,
+                    DestinationName = t.Route.Destination.Name,
+                    DepartureTime = t.DepartureTime,
+                    ArrivalTime = t.ArrivalTime,
+                    SeatFare = t.SeatFare,
+                    CargoFare = t.CargoFare,
+                    TotalSeats = t.Bus.NumberOfSeats,
+                    AvailableSeats = t.Bus.NumberOfSeats - t.SeatsBooked,
+                    HasCargoSpace = t.Bus.HasCargoSpace,
+                    TotalCargoCapacity = t.Bus.CargoCapacity,
+                    AvailableCargoCapacity = t.Bus.CargoCapacity - t.CargoCapacityBooked
+                }).AsNoTracking().ToListAsync();
+
+            return trips;
+        }
+    }
+}

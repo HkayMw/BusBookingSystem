@@ -1,4 +1,10 @@
-﻿using BusBookingSystem.Core.Entities;
+﻿/*
+    This code defines the configuration for the Depot entity in the BusBookingSystem application using Entity Framework Core. 
+    It specifies the primary key, required properties, maximum lengths, unique constraints, and default values for various fields. 
+    Additionally, it configures the owned Address entity and sets up indexes for performance optimization.
+*/
+
+using BusBookingSystem.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -6,29 +12,33 @@ namespace BusBookingSystem.Infrastructure.Data.Configurations
 {
     public class DepotConfiguration : IEntityTypeConfiguration<Depot>
     {
-        public void Configure(EntityTypeBuilder<Depot> entity)
+        public void Configure(EntityTypeBuilder<Depot> depot)
         {
             //throw new NotImplementedException();
 
-            entity.HasKey(d => d.Id);
-            entity.Property(d => d.DepotCode).IsRequired().HasMaxLength(20);
-            entity.HasIndex(d=> d.DepotCode).IsUnique();
-            entity.Property(d => d.Name).IsRequired().HasMaxLength(100);
-            entity.OwnsOne(d => d.Address, address =>
+            depot.HasKey(d => d.Id);
+            depot.Property(d => d.DepotCode).IsRequired().HasMaxLength(20);
+            depot.Property(d => d.Name).IsRequired().HasMaxLength(100);
+            depot.OwnsOne(d => d.Address, address =>
             {
-                address.Property(a => a.Addressline1).IsRequired().HasMaxLength(200);
+                address.Property(a => a.Addressline1).HasMaxLength(200);
                 address.Property(a => a.Addressline2).HasMaxLength(200);
                 address.Property(a => a.City).IsRequired().HasMaxLength(100);
                 address.Property(a => a.Region).IsRequired().HasMaxLength(100);
                 address.Property(a => a.Country).IsRequired().HasMaxLength(100);
-                address.Property(a => a.PostalCode).IsRequired().HasMaxLength(20);
+                address.Property(a => a.PostalCode).HasMaxLength(20);
             });
-            entity.Property(d => d.PhoneNumber).HasMaxLength(20);
-            entity.Property(d => d.Latitude).HasMaxLength(50);
-            entity.Property(d => d.Longitude).HasMaxLength(50);
-            entity.Property(d => d.IsActive).HasDefaultValue(true);
-            entity.Property(d => d.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
-            //entity.Property(d => d.UpdatedAt).IsRequired(false);
+            depot.Property(d => d.PhoneNumber).HasMaxLength(20);
+            depot.Property(d => d.Latitude).HasMaxLength(50);
+            depot.Property(d => d.Longitude).HasMaxLength(50);
+            depot.Property(d => d.IsActive).HasDefaultValue(true);
+            depot.Property(d => d.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+            depot.Property(d => d.UpdatedAt).IsRequired(false);
+
+            // Indexes for performance optimization
+            depot.HasIndex(d => d.DepotCode).IsUnique();
+
+            //TODO: Consider composite index on Depot
         }
     }
 }
