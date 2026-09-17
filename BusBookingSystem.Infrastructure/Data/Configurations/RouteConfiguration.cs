@@ -15,9 +15,6 @@ namespace BusBookingSystem.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<Route> route)
         {
             route.HasKey(r => r.Id);
-            route.Property(r => r.Name)
-                .IsRequired()
-                .HasMaxLength(100);
             route.Property(r => r.CreatedAt)
                 .HasColumnType("datetimeoffset")
                 .HasDefaultValueSql("SYSUTCDATETIME()")

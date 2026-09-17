@@ -1,24 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿
 namespace BusBookingSystem.Application.DTOs
 {
     public class TripDto
     {
-        public Guid Id { get; set; }
-        public Guid RouteId { get; set; }
-        public Guid BusId { get; set; }
-        public string BusName { get; set; } = null!;
-        public Guid OriginId { get; set; }
-        public string OriginName { get; set; } = null!;
-        public Guid DestinationId { get; set; }
-        public string DestinationName { get; set; } = null!;
-        public DateTime DepartureTime { get; set; }
-        public DateTime? ArrivalTime { get; set; }
-        public decimal BaseFare { get; set; }
-        public int AvailableSeats { get; set; }
-        public int TotalSeats { get; set; }
-
+        public Guid TripId { get; set; } // from t.Id
+        public string Route { get; set; } = null!; // from t.Route.Origin.Name + " - " + t.Route.Destination.Name
+        public string BusFleetNumber { get; set; } = null!; // from t.Bus.FleetNumber
+        public string BusType { get; set; } = null!; // from t.Bus.BusType.ToString()
+        public string OriginDepotName { get; set; } = null!; // from t.Route.Origin.Name
+        public string DestinationDepotName { get; set; } = null!; // from t.Route.Destination.Name
+        public DateTimeOffset DepartureTime { get; set; } // from t.DepartureTime
+        public DateTimeOffset? ArrivalTime { get; set; } // from t.ArrivalTime
+        public decimal SeatFare { get; set; } // from t.SeatFare
+        public decimal? CargoFare { get; set; } // from t.CargoFare
+        public int TotalSeats { get; set; } // from t.Bus.NumberOfSeats
+        public int AvailableSeats { get; set; } // from t.Bus.NumberOfSeats - t.SeatsBooked
+        public bool HasCargoSpace { get; set; } // from t.Bus.HasCargoSpace
+        public int TotalCargoCapacity { get; set; } // from t.Bus.CargoCapacity
+        public int AvailableCargoCapacity { get; set; } // from t.Bus.CargoCapacity - t.CargoCapacityBooked
     }
 }

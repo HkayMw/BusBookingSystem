@@ -13,6 +13,7 @@ namespace BusBookingSystem.Application.Interfaces.Services
                 Guid destinationDepotId,
                 DateOnly departureDate
             );
+        Task<TripDto?> GetTripByIdAsync(Guid tripId);
 
     }
 }

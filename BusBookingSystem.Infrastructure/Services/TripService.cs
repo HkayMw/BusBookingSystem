@@ -24,9 +24,32 @@ namespace BusBookingSystem.Infrastructure.Services
                 .Select(t => new TripListResultDto
                 {
                     TripId = t.Id,
-                    Bus = t.Bus.FleetNumber,
-                    OriginName = t.Route.Origin.Name,
-                    DestinationName = t.Route.Destination.Name,
+                    OriginDepotName = t.Route.Origin.Name,
+                    DestinationDepotName = t.Route.Destination.Name,
+                    DepartureTime = t.DepartureTime,
+                    ArrivalTime = t.ArrivalTime,
+                    SeatFare = t.SeatFare,
+                    CargoFare = t.CargoFare,
+                    AvailableSeats = t.Bus.NumberOfSeats - t.SeatsBooked,
+                    HasCargoSpace = t.Bus.HasCargoSpace,
+                    AvailableCargoCapacity = t.Bus.CargoCapacity - t.CargoCapacityBooked
+                }).AsNoTracking().ToListAsync();
+
+            return trips;
+        }
+
+        public async Task<TripDto?> GetTripByIdAsync(Guid tripId)
+        {
+            var trip = await _context.Trips
+                .Where(t => t.Id == tripId)
+                .Select(t => new TripDto
+                {
+                    TripId = t.Id,
+                    Route = $"{t.Route.Origin.Name} - {t.Route.Destination.Name}",
+                    BusFleetNumber = t.Bus.FleetNumber,
+                    BusType = t.Bus.BusType.ToString(),
+                    OriginDepotName = t.Route.Origin.Name,
+                    DestinationDepotName = t.Route.Destination.Name,
                     DepartureTime = t.DepartureTime,
                     ArrivalTime = t.ArrivalTime,
                     SeatFare = t.SeatFare,
@@ -36,9 +59,11 @@ namespace BusBookingSystem.Infrastructure.Services
                     HasCargoSpace = t.Bus.HasCargoSpace,
                     TotalCargoCapacity = t.Bus.CargoCapacity,
                     AvailableCargoCapacity = t.Bus.CargoCapacity - t.CargoCapacityBooked
-                }).AsNoTracking().ToListAsync();
+                })
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
 
-            return trips;
+            return trip;
         }
 
         public async Task<IReadOnlyList<TripListResultDto>> SearchTripAsync(Guid originDepotId, Guid destinationDepotId, DateOnly departureDate)
@@ -76,17 +101,17 @@ namespace BusBookingSystem.Infrastructure.Services
                 .Select(t => new TripListResultDto
                 {
                     TripId = t.Id,
-                    Bus = t.Bus.FleetNumber,
-                    OriginName = t.Route.Origin.Name,
-                    DestinationName = t.Route.Destination.Name,
+                    //Bus = t.Bus.FleetNumber,
+                    OriginDepotName = t.Route.Origin.Name,
+                    DestinationDepotName = t.Route.Destination.Name,
                     DepartureTime = t.DepartureTime,
                     ArrivalTime = t.ArrivalTime,
                     SeatFare = t.SeatFare,
                     CargoFare = t.CargoFare,
-                    TotalSeats = t.Bus.NumberOfSeats,
+                    //TotalSeats = t.Bus.NumberOfSeats,
                     AvailableSeats = t.Bus.NumberOfSeats - t.SeatsBooked,
                     HasCargoSpace = t.Bus.HasCargoSpace,
-                    TotalCargoCapacity = t.Bus.CargoCapacity,
+                    //TotalCargoCapacity = t.Bus.CargoCapacity,
                     AvailableCargoCapacity = t.Bus.CargoCapacity - t.CargoCapacityBooked
                 }).AsNoTracking().ToListAsync();
 
