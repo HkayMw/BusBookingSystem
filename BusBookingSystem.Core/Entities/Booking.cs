@@ -12,7 +12,9 @@ namespace BusBookingSystem.Core.Entities
         public required int NumberOfSeats { get; set; }
         public required string BookingReference { get; set; } // TODO: Generate a unique booking reference
         public BookingStatus BookingStatus { get; set; }
+        public byte[] RowVersion { get; set; } = null!;
 
-
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset? UpdatedAt { get; set; }
     }
 }

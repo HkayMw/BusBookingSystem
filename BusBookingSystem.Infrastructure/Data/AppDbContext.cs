@@ -13,6 +13,7 @@ namespace BusBookingSystem.Infrastructure.Data
         public DbSet<Trip> Trips { get; set; }
         public DbSet<Bus> Buses { get; set; }
         public DbSet<Route> Routes { get; set; }
+        public DbSet<Booking> Bookings { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

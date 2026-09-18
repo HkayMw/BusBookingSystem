@@ -28,6 +28,8 @@ namespace BusBookingSystem.Infrastructure.Data.Configurations
                 .IsRequired();
             bus.Property(b => b.BusType)
                 .IsRequired();
+            bus.Property(b => b.BusStatus)
+                .IsRequired();
             bus.Property(b => b.RegistrationNumber)
                 .IsRequired()
                 .HasMaxLength(20);
