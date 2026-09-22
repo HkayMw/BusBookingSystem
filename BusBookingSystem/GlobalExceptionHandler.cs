@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
+﻿using BusBookingSystem.API.Models;
+using BusBookingSystem.Application.Exceptions;
+using Microsoft.AspNetCore.Diagnostics;
 
 namespace BusBookingSystem.API
 {
     public class GlobalExceptionHandler(
-        IProblemDetailsService problemDetailsService,
         ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
     {
         public async ValueTask<bool> TryHandleAsync(
@@ -17,23 +17,31 @@ namespace BusBookingSystem.API
             var statusCode = exception switch
             {
                 ArgumentException => StatusCodes.Status400BadRequest,
-                KeyNotFoundException => StatusCodes.Status404NotFound,
+                ResourceNotFoundException => StatusCodes.Status404NotFound,
+                BookingConflictException => StatusCodes.Status409Conflict,
                 _ => StatusCodes.Status500InternalServerError
             };
 
             httpContext.Response.StatusCode = statusCode;
 
-            return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+            var message = statusCode switch
             {
-                HttpContext = httpContext,
-                Exception = exception,
-                ProblemDetails = new ProblemDetails
+                StatusCodes.Status400BadRequest => exception.Message,
+                StatusCodes.Status404NotFound => exception.Message,
+                StatusCodes.Status409Conflict => exception.Message,
+                _ => "An unexpected error occurred."
+            };
+
+            await httpContext.Response.WriteAsJsonAsync(
+                new ApiResponse<object>
                 {
-                    Status = statusCode,
-                    Title = statusCode == StatusCodes.Status400BadRequest ? "Invalid request" : "An error occurred",
-                    Detail = exception.Message
-                }
-            });
+                    Success = false,
+                    StatusCode = statusCode,
+                    Message = message
+                },
+                cancellationToken);
+
+            return true;
         }
     }
 }

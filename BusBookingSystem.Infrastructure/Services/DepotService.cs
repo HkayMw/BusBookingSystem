@@ -5,6 +5,7 @@
     The service provides various methods to manage depots
 */
 
+using BusBookingSystem.Application.Common;
 using BusBookingSystem.Application.DTOs;
 using BusBookingSystem.Application.Interfaces.Services;
 using BusBookingSystem.Infrastructure.Data;
@@ -25,7 +26,7 @@ namespace BusBookingSystem.Infrastructure.Services
            It uses LINQ to filter depots based on their IsActive property and projects the results into DepotListDto objects. 
            The method returns a read-only list of DepotListDto objects asynchronously.
         */
-        public async Task<IReadOnlyList<DepotListDto>> GetActiveDepotsAsync()
+        public async Task<Result<IReadOnlyList<DepotListDto>>> GetActiveDepotsAsync()
         {
             // Implementation for getting active depots
 
@@ -39,7 +40,7 @@ namespace BusBookingSystem.Infrastructure.Services
                     City = d.Address.City
                 }).AsNoTracking().ToListAsync();
 
-            return activeDepots;
+            return Result<IReadOnlyList<DepotListDto>>.Ok(activeDepots, "Active depots retrieved successfully.");
         }
     }
 

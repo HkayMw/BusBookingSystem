@@ -1,6 +1,7 @@
 ﻿/* This file
  */
-
+using BusBookingSystem.API.Models;
+using BusBookingSystem.API.Extensions;
 using BusBookingSystem.Application.DTOs;
 using BusBookingSystem.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -14,28 +15,39 @@ namespace BusBookingSystem.API.Controllers
         private readonly ITripService _tripService = tripService;
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TripListResultDto>>> GetAllTrips()
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<TripListResultDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<TripListResultDto>>>> GetAllTrips()
         {
-            var trips = await _tripService.GetAllTripsAsync();
-            //return trips is null ? NotFound() : Ok(trips);
-            return Ok(trips);
+            var result = await _tripService.GetAllTripsAsync();
+            var response = result.ToApiResponse();
 
+            return StatusCode(response.StatusCode, response.Body);
         }
 
         [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<TripListResultDto>>> SearchTrips([FromQuery] Guid originDepotId, [FromQuery] Guid destinationDepotId, [FromQuery] DateOnly departureDate)
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<TripListResultDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<ApiResponse<IEnumerable<TripListResultDto>>>> SearchTrips([FromQuery] Guid originDepotId, [FromQuery] Guid destinationDepotId, [FromQuery] DateOnly departureDate)
         {
-            var trips = await _tripService.SearchTripAsync(originDepotId, destinationDepotId, departureDate);
-            return Ok(trips);
+            var result = await _tripService.SearchTripAsync(originDepotId, destinationDepotId, departureDate);
+            var response = result.ToApiResponse();
+
+            return StatusCode(response.StatusCode, response.Body);
 
         }
 
         [HttpGet("{tripId:guid}")]
-        public async Task<ActionResult<TripDto>> GetTripById(Guid tripId)
+        [ProducesResponseType(typeof(ApiResponse<TripDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<ApiResponse<TripDto>>> GetTripById(Guid tripId)
         {
-            var trip = await _tripService.GetTripByIdAsync(tripId);
+            var result = await _tripService.GetTripByIdAsync(tripId);
+            var response = result.ToApiResponse();
 
-            return trip is null ? NotFound() : Ok(trip);
+            return StatusCode(response.StatusCode, response.Body);
         }
     }
 }

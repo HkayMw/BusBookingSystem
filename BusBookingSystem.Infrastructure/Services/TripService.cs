@@ -2,6 +2,7 @@
    It is intended to provide methods for managing trips in the Bus Booking System application.
 */
 
+using BusBookingSystem.Application.Common;
 using BusBookingSystem.Application.DTOs;
 using BusBookingSystem.Application.Interfaces.Services;
 using BusBookingSystem.Infrastructure.Data;
@@ -18,7 +19,7 @@ namespace BusBookingSystem.Infrastructure.Services
             _context = context;
         }
 
-        public async Task<IReadOnlyList<TripListResultDto>> GetAllTripsAsync()
+        public async Task<Result<IReadOnlyList<TripListResultDto>>> GetAllTripsAsync()
         {
             var trips = await _context.Trips
                 .Select(t => new TripListResultDto
@@ -35,11 +36,12 @@ namespace BusBookingSystem.Infrastructure.Services
                     AvailableCargoCapacity = t.Bus.CargoCapacity - t.CargoCapacityBooked
                 }).AsNoTracking().ToListAsync();
 
-            return trips;
+            return Result<IReadOnlyList<TripListResultDto>>.Ok(trips, "Trips retrieved successfully.");
         }
 
-        public async Task<TripDto?> GetTripByIdAsync(Guid tripId)
+        public async Task<Result<TripDto>> GetTripByIdAsync(Guid tripId)
         {
+
             var trip = await _context.Trips
                 .Where(t => t.Id == tripId)
                 .Select(t => new TripDto
@@ -63,31 +65,33 @@ namespace BusBookingSystem.Infrastructure.Services
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
-            return trip;
+            return trip is null
+                ? Result<TripDto>.NotFound("Trip was not found.")
+                : Result<TripDto>.Ok(trip, "Trip retrieved successfully.");
         }
 
-        public async Task<IReadOnlyList<TripListResultDto>> SearchTripAsync(Guid originDepotId, Guid destinationDepotId, DateOnly departureDate)
+        public async Task<Result<IReadOnlyList<TripListResultDto>>> SearchTripAsync(Guid originDepotId, Guid destinationDepotId, DateOnly departureDate)
         {
             // validate input parameters
 
             if (originDepotId == Guid.Empty)
             {
-                throw new ArgumentException("Origin depot ID cannot be empty.", nameof(originDepotId));
+                return Result<IReadOnlyList<TripListResultDto>>.Invalid("Origin depot ID cannot be empty.", nameof(originDepotId));
             }
 
             if (destinationDepotId == Guid.Empty)
             {
-                throw new ArgumentException("Destination depot ID cannot be empty.", nameof(destinationDepotId));
+                return Result<IReadOnlyList<TripListResultDto>>.Invalid("Destination depot ID cannot be empty.", nameof(destinationDepotId));
             }
 
             if (originDepotId == destinationDepotId)
             {
-                throw new ArgumentException("Origin and destination depot IDs cannot be the same.");
+                return Result<IReadOnlyList<TripListResultDto>>.Invalid("Origin and destination depot IDs cannot be the same.");
             }
 
             if (departureDate == DateOnly.MinValue)
             {
-                throw new ArgumentException("Departure date cannot be empty.", nameof(departureDate));
+                return Result<IReadOnlyList<TripListResultDto>>.Invalid("Departure date cannot be empty.", nameof(departureDate));
             }
 
 
@@ -115,7 +119,7 @@ namespace BusBookingSystem.Infrastructure.Services
                     AvailableCargoCapacity = t.Bus.CargoCapacity - t.CargoCapacityBooked
                 }).AsNoTracking().ToListAsync();
 
-            return trips;
+            return Result<IReadOnlyList<TripListResultDto>>.Ok(trips, "Trips searched successfully.");
         }
     }
 }

@@ -1,6 +1,7 @@
-﻿using BusBookingSystem.Application.DTOs;
+﻿using BusBookingSystem.API.Extensions;
+using BusBookingSystem.API.Models;
+using BusBookingSystem.Application.DTOs;
 using BusBookingSystem.Application.Interfaces.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BusBookingSystem.API.Controllers
@@ -12,10 +13,16 @@ namespace BusBookingSystem.API.Controllers
         private readonly IBookingService _bookingService = bookingService;
 
         [HttpPost]
-        public async Task<ActionResult<BookingResponseDto>> CreateBooking([FromBody] BookingRequestDto  requestDto)
+        [ProducesResponseType(typeof(ApiResponse<BookingResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
+        public async Task<ActionResult<ApiResponse<BookingResponseDto>>> CreateBooking([FromBody] BookingRequestDto requestDto)
         {
-            var booking = await _bookingService.CreateBookingAsync(requestDto);
-            return Ok(booking);
+            var result = await _bookingService.CreateBookingAsync(requestDto);
+            var response = result.ToApiResponse();
+
+            return StatusCode(response.StatusCode, response.Body);
         }
     }
 }

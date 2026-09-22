@@ -1,5 +1,7 @@
 ﻿
+using BusBookingSystem.Application.Common;
 using BusBookingSystem.Application.DTOs;
+using BusBookingSystem.Application.Exceptions;
 using BusBookingSystem.Application.Interfaces.Services;
 using BusBookingSystem.Core.Entities;
 using BusBookingSystem.Infrastructure.Data;
@@ -16,36 +18,36 @@ namespace BusBookingSystem.Infrastructure.Services
             _context = context;
         }
 
-        public async Task<BookingResponseDto> CreateBookingAsync(BookingRequestDto requestDto)
+        public async Task<Result<BookingResponseDto>> CreateBookingAsync(BookingRequestDto requestDto)
         {
             if (requestDto is null)
             {
-                throw new ArgumentNullException(nameof(requestDto), "Booking request cannot be null.");
+                return Result<BookingResponseDto>.Invalid("Booking request cannot be null.");
             }
 
             if (requestDto.UserId == Guid.Empty)
             {
-                throw new ArgumentException("User ID is required.", nameof(requestDto.UserId));
+                return Result<BookingResponseDto>.Invalid("User ID is required.", nameof(requestDto.UserId));
             }
 
             if (requestDto.TripId == Guid.Empty)
             {
-                throw new ArgumentException("Trip ID is required.", nameof(requestDto.TripId));
+                return Result<BookingResponseDto>.Invalid("Trip ID is required.", nameof(requestDto.TripId));
             }
 
             if (requestDto.NumberOfSeats < 0)
             {
-                throw new ArgumentException("Number of seats can not be negative.", nameof(requestDto.NumberOfSeats));
+                return Result<BookingResponseDto>.Invalid("Number of seats can not be negative.", nameof(requestDto.NumberOfSeats));
             }
 
             if (requestDto.CargoWeight < 0)
             {
-                throw new ArgumentException("Cargo weight cannot be negative.", nameof(requestDto.CargoWeight));
+                return Result<BookingResponseDto>.Invalid("Cargo weight cannot be negative.", nameof(requestDto.CargoWeight));
             }
 
             if (requestDto.CargoWeight == 0 && requestDto.NumberOfSeats == 0)
             {
-                throw new ArgumentException("A booking must include at least one seat or cargo quantity.", nameof(requestDto));
+                return Result<BookingResponseDto>.Invalid("A booking must include at least one seat or cargo quantity.", nameof(requestDto));
             }
 
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -58,7 +60,8 @@ namespace BusBookingSystem.Infrastructure.Services
 
                 if (!userExists)
                 {
-                    throw new InvalidOperationException("User was not found.");
+                    await transaction.RollbackAsync();
+                    return Result<BookingResponseDto>.NotFound("User was not found.");
                 }
 
                 var trip = await _context.Trips
@@ -71,26 +74,30 @@ namespace BusBookingSystem.Infrastructure.Services
 
                 if (trip is null)
                 {
-                    throw new InvalidOperationException("Trip was not found.");
+                    await transaction.RollbackAsync();
+                    return Result<BookingResponseDto>.NotFound("Trip was not found.");
                 }
 
                 var availableSeats = trip.Bus.NumberOfSeats - trip.SeatsBooked;
                 if (requestDto.NumberOfSeats > availableSeats)
                 {
-                    throw new InvalidOperationException($"Not enough seats available. Requested: {requestDto.NumberOfSeats}, Available: {availableSeats}.");
+                    await transaction.RollbackAsync();
+                    return Result<BookingResponseDto>.Conflict($"Not enough seats available. Requested: {requestDto.NumberOfSeats}, Available: {availableSeats}.");
                 }
 
                 if (requestDto.CargoWeight > 0)
                 {
                     if (!trip.Bus.HasCargoSpace)
                     {
-                        throw new InvalidOperationException("This bus does not support cargo bookings.");
+                        await transaction.RollbackAsync();
+                        return Result<BookingResponseDto>.Conflict("This bus does not support cargo bookings.");
                     }
 
                     var availableCargoCapacity = trip.Bus.CargoCapacity - trip.CargoCapacityBooked;
                     if (requestDto.CargoWeight > availableCargoCapacity)
                     {
-                        throw new InvalidOperationException($"Not enough cargo capacity available. Requested: {requestDto.CargoWeight}, Available: {availableCargoCapacity}.");
+                        await transaction.RollbackAsync();
+                        return Result<BookingResponseDto>.Conflict($"Not enough cargo capacity available. Requested: {requestDto.CargoWeight}, Available: {availableCargoCapacity}.");
                     }
                 }
 
@@ -123,7 +130,7 @@ namespace BusBookingSystem.Infrastructure.Services
                     ? (int)(trip.CargoFare.Value * requestDto.CargoWeight)
                     : 0;
 
-                return new BookingResponseDto
+                return Result<BookingResponseDto>.Ok(new BookingResponseDto
                 {
                     BookingId = booking.Id,
                     BookingReference = booking.BookingReference,
@@ -133,7 +140,7 @@ namespace BusBookingSystem.Infrastructure.Services
                     SeatsFare = seatsFare,
                     CargoFare = cargoFare,
                     TotalFare = seatsFare + cargoFare
-                };
+                }, "Booking created successfully.");
             }
             catch
             {
