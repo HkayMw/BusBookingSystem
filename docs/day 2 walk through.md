@@ -128,9 +128,9 @@ namespace BusBookingSystem.Application.DTOs
     public class DepotListDto
     {
         public Guid Id { get; set; }
-        public string DepotCode { get; set; } = null!;
-        public string Name { get; set; } = null!;
-        public string DisplayLocation { get; set; } = null!;
+        public string DepotCode { get; set; } = default!;
+        public string Name { get; set; } = default!;
+        public string DisplayLocation { get; set; } = default!;
     }
 }
 ```

@@ -18,36 +18,36 @@ namespace BusBookingSystem.Infrastructure.Services
             _context = context;
         }
 
-        public async Task<Result<BookingResponseDto>> CreateBookingAsync(BookingRequestDto requestDto)
+        public async Task<Result<BookingResponseDto>> CreateBookingAsync(Guid userId, BookingRequestDto requestDto)
         {
             if (requestDto is null)
             {
-                return Result<BookingResponseDto>.Invalid("Booking request cannot be null.");
+                return Result<BookingResponseDto>.BadRequest("Booking request cannot be null.");
             }
 
-            if (requestDto.UserId == Guid.Empty)
+            if (userId == Guid.Empty)
             {
-                return Result<BookingResponseDto>.Invalid("User ID is required.", nameof(requestDto.UserId));
+                return Result<BookingResponseDto>.BadRequest("User ID is required.", nameof(userId));
             }
 
             if (requestDto.TripId == Guid.Empty)
             {
-                return Result<BookingResponseDto>.Invalid("Trip ID is required.", nameof(requestDto.TripId));
+                return Result<BookingResponseDto>.BadRequest("Trip ID is required.", nameof(requestDto.TripId));
             }
 
             if (requestDto.NumberOfSeats < 0)
             {
-                return Result<BookingResponseDto>.Invalid("Number of seats can not be negative.", nameof(requestDto.NumberOfSeats));
+                return Result<BookingResponseDto>.BadRequest("Number of seats can not be negative.", nameof(requestDto.NumberOfSeats));
             }
 
             if (requestDto.CargoWeight < 0)
             {
-                return Result<BookingResponseDto>.Invalid("Cargo weight cannot be negative.", nameof(requestDto.CargoWeight));
+                return Result<BookingResponseDto>.BadRequest("Cargo weight cannot be negative.", nameof(requestDto.CargoWeight));
             }
 
             if (requestDto.CargoWeight == 0 && requestDto.NumberOfSeats == 0)
             {
-                return Result<BookingResponseDto>.Invalid("A booking must include at least one seat or cargo quantity.", nameof(requestDto));
+                return Result<BookingResponseDto>.BadRequest("A booking must include at least one seat or cargo quantity.", nameof(requestDto));
             }
 
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -56,7 +56,7 @@ namespace BusBookingSystem.Infrastructure.Services
             {
                 var userExists = await _context.Set<User>()
                     .AsNoTracking()
-                    .AnyAsync(u => u.Id == requestDto.UserId);
+                    .AnyAsync(u => u.Id == userId);
 
                 if (!userExists)
                 {
@@ -105,12 +105,12 @@ namespace BusBookingSystem.Infrastructure.Services
 
                 var booking = new Booking
                 {
-                    UserId = requestDto.UserId,
+                    UserId = userId,
                     TripId = requestDto.TripId,
                     NumberOfSeats = requestDto.NumberOfSeats,
                     BookingReference = bookingReference,
                     BookingStatus = BusBookingSystem.Core.Enums.BookingStatus.Confirmed,
-                    User = await _context.Set<User>().FirstAsync(u => u.Id == requestDto.UserId),
+                    User = await _context.Set<User>().FirstAsync(u => u.Id == userId),
                     Trip = trip
                 };
 

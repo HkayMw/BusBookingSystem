@@ -7,6 +7,6 @@ namespace BusBookingSystem.Application.Interfaces.Services
 {
     public interface IBookingService
     {
-        Task<Result<BookingResponseDto>> CreateBookingAsync(BookingRequestDto requestDto);
+        Task<Result<BookingResponseDto>> CreateBookingAsync(Guid userId, BookingRequestDto requestDto);
     }
 }

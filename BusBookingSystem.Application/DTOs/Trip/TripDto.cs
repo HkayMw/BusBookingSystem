@@ -4,11 +4,11 @@ namespace BusBookingSystem.Application.DTOs
     public class TripDto
     {
         public Guid TripId { get; set; } // from t.Id
-        public string Route { get; set; } = null!; // from t.Route.Origin.Name + " - " + t.Route.Destination.Name
-        public string BusFleetNumber { get; set; } = null!; // from t.Bus.FleetNumber
-        public string BusType { get; set; } = null!; // from t.Bus.BusType.ToString()
-        public string OriginDepotName { get; set; } = null!; // from t.Route.Origin.Name
-        public string DestinationDepotName { get; set; } = null!; // from t.Route.Destination.Name
+        public string Route { get; set; } = default!; // from t.Route.Origin.Name + " - " + t.Route.Destination.Name
+        public string BusFleetNumber { get; set; } = default!; // from t.Bus.FleetNumber
+        public string BusType { get; set; } = default!; // from t.Bus.BusType.ToString()
+        public string OriginDepotName { get; set; } = default!; // from t.Route.Origin.Name
+        public string DestinationDepotName { get; set; } = default!; // from t.Route.Destination.Name
         public DateTimeOffset DepartureTime { get; set; } // from t.DepartureTime
         public DateTimeOffset? ArrivalTime { get; set; } // from t.ArrivalTime
         public decimal SeatFare { get; set; } // from t.SeatFare

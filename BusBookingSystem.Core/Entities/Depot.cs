@@ -3,7 +3,7 @@
     public class Depot
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public required string DepotCode { get; set; }= null!;
+        public required string DepotCode { get; set; }= default!;
         public required string Name { get; set; }
         public required Address Address { get; set; }
         public string? PhoneNumber { get; set; }

@@ -3,7 +3,11 @@ namespace BusBookingSystem.Application.Common
     public enum ResultStatus
     {
         Success,
-        ValidationError,
+        Created,
+        NoContent,
+        UnAuthorized,
+        Forbidden,
+        BadRequest,
         NotFound,
         Conflict,
         Unexpected

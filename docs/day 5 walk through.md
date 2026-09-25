@@ -137,11 +137,11 @@ The response DTO should return only what the customer or client needs, such as:
 public class BookingResponseDto
 {
     public Guid BookingId { get; set; }
-    public string BookingReference { get; set; } = null!;
-    public string TripSummary { get; set; } = null!;
+    public string BookingReference { get; set; } = default!;
+    public string TripSummary { get; set; } = default!;
     public int NumberOfSeats { get; set; }
     public decimal TotalFare { get; set; }
-    public string Status { get; set; } = null!;
+    public string Status { get; set; } = default!;
 }
 ```
 

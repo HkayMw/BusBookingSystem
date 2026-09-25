@@ -1,6 +1,5 @@
 using BusBookingSystem.Application.Common;
 using BusBookingSystem.API.Models;
-using Microsoft.AspNetCore.Http;
 
 namespace BusBookingSystem.API.Extensions
 {
@@ -11,9 +10,13 @@ namespace BusBookingSystem.API.Extensions
             var statusCode = result.Status switch
             {
                 ResultStatus.Success => StatusCodes.Status200OK,
-                ResultStatus.ValidationError => StatusCodes.Status400BadRequest,
+                ResultStatus.Created => StatusCodes.Status201Created,
+                ResultStatus.NoContent => StatusCodes.Status204NoContent,
+                ResultStatus.BadRequest => StatusCodes.Status400BadRequest,
                 ResultStatus.NotFound => StatusCodes.Status404NotFound,
                 ResultStatus.Conflict => StatusCodes.Status409Conflict,
+                ResultStatus.UnAuthorized => StatusCodes.Status401Unauthorized,
+                ResultStatus.Forbidden => StatusCodes.Status403Forbidden,
                 _ => StatusCodes.Status500InternalServerError
             };
 

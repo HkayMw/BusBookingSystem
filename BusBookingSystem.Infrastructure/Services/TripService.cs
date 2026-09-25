@@ -76,22 +76,22 @@ namespace BusBookingSystem.Infrastructure.Services
 
             if (originDepotId == Guid.Empty)
             {
-                return Result<IReadOnlyList<TripListResultDto>>.Invalid("Origin depot ID cannot be empty.", nameof(originDepotId));
+                return Result<IReadOnlyList<TripListResultDto>>.BadRequest("Origin depot ID cannot be empty.", nameof(originDepotId));
             }
 
             if (destinationDepotId == Guid.Empty)
             {
-                return Result<IReadOnlyList<TripListResultDto>>.Invalid("Destination depot ID cannot be empty.", nameof(destinationDepotId));
+                return Result<IReadOnlyList<TripListResultDto>>.BadRequest("Destination depot ID cannot be empty.", nameof(destinationDepotId));
             }
 
             if (originDepotId == destinationDepotId)
             {
-                return Result<IReadOnlyList<TripListResultDto>>.Invalid("Origin and destination depot IDs cannot be the same.");
+                return Result<IReadOnlyList<TripListResultDto>>.BadRequest("Origin and destination depot IDs cannot be the same.");
             }
 
             if (departureDate == DateOnly.MinValue)
             {
-                return Result<IReadOnlyList<TripListResultDto>>.Invalid("Departure date cannot be empty.", nameof(departureDate));
+                return Result<IReadOnlyList<TripListResultDto>>.BadRequest("Departure date cannot be empty.", nameof(departureDate));
             }
 
 

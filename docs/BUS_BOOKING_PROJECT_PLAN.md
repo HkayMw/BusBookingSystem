@@ -1,4 +1,5 @@
 # BUS BOOKING SYSTEM — C# Project Plan
+
 ## From Idea to Production (14 weeks)
 
 **Your stack:** C# + ASP.NET Core 10 + SQL Server + Blazor  
@@ -12,6 +13,7 @@
 ### **What is a Bus Booking System?**
 
 Users should be able to:
+
 1. **Browse trips** (routes, schedules, depots, and prices)
 2. **Check availability** (segment-aware seats)
 3. **Book seats** (select passengers and seats)
@@ -396,14 +398,14 @@ The customer profile linked to a `User`. It stores contact details and owns cust
 public class Depot
 {
    public Guid Id { get; set; }
-   public string Code { get; set; } = null!; // Unique, e.g. LIL-CENTRAL
-   public string Name { get; set; } = null!;
-   public string AddressLine1 { get; set; } = null!;
+   public string Code { get; set; } = default!; // Unique, e.g. LIL-CENTRAL
+   public string Name { get; set; } = default!;
+   public string AddressLine1 { get; set; } = default!;
    public string? AddressLine2 { get; set; }
-   public string City { get; set; } = null!;
-   public string Region { get; set; } = null!;
-   public string CountryCode { get; set; } = null!; // ISO 3166-1 alpha-2
-   public string TimeZoneId { get; set; } = null!; // IANA ID
+   public string City { get; set; } = default!;
+   public string Region { get; set; } = default!;
+   public string CountryCode { get; set; } = default!; // ISO 3166-1 alpha-2
+   public string TimeZoneId { get; set; } = default!; // IANA ID
    public decimal? Latitude { get; set; }
    public decimal? Longitude { get; set; }
    public string? PhoneNumber { get; set; }
@@ -419,10 +421,10 @@ public class Depot
 public class Bus
 {
    public Guid Id { get; set; }
-   public string FleetNumber { get; set; } = null!; // Unique internal identifier
-   public string RegistrationNumber { get; set; } = null!; // Unique legal identifier
-   public string Manufacturer { get; set; } = null!;
-   public string Model { get; set; } = null!;
+   public string FleetNumber { get; set; } = default!; // Unique internal identifier
+   public string RegistrationNumber { get; set; } = default!; // Unique legal identifier
+   public string Manufacturer { get; set; } = default!;
+   public string Model { get; set; } = default!;
    public int ManufactureYear { get; set; }
    public int Capacity { get; set; }
    public bool IsAccessible { get; set; }
@@ -439,12 +441,12 @@ public class BusSeat
 {
    public Guid Id { get; set; }
    public Guid BusId { get; set; }
-   public string SeatNumber { get; set; } = null!;
+   public string SeatNumber { get; set; } = default!;
    public int RowNumber { get; set; }
    public int ColumnNumber { get; set; }
    public SeatType Type { get; set; }
    public bool IsActive { get; set; } = true;
-   public Bus Bus { get; set; } = null!;
+   public Bus Bus { get; set; } = default!;
 }
 ```
 
@@ -454,7 +456,7 @@ public class BusSeat
 public class Route
 {
    public Guid Id { get; set; }
-   public string Code { get; set; } = null!; // Unique, e.g. LIL-BLA-01
+   public string Code { get; set; } = default!; // Unique, e.g. LIL-BLA-01
    <!-- The following block was an accidental duplicate insertion and is hidden. -->
    <!--
    ## **PART 3: MICRO-TASKS FOR YOUR 2.5-HOUR SESSIONS**
@@ -479,8 +481,8 @@ public class RouteStop
    public int DistanceFromOriginKm { get; set; }
    public int ArrivalOffsetMinutes { get; set; }
    public int DepartureOffsetMinutes { get; set; }
-   public Route Route { get; set; } = null!;
-   public Depot Depot { get; set; } = null!;
+   public Route Route { get; set; } = default!;
+   public Depot Depot { get; set; } = default!;
 }
 ```
 
@@ -491,13 +493,13 @@ public class Schedule
 {
    public Guid Id { get; set; }
    public Guid RouteId { get; set; }
-   public string Name { get; set; } = null!;
+   public string Name { get; set; } = default!;
    public TimeOnly PlannedDepartureTime { get; set; }
    public int OperatingDaysMask { get; set; } // Bit mask: Monday = 1, Tuesday = 2, etc.
    public DateOnly EffectiveFrom { get; set; }
    public DateOnly? EffectiveTo { get; set; }
    public bool IsActive { get; set; } = true;
-   public Route Route { get; set; } = null!;
+   public Route Route { get; set; } = default!;
 }
 ```
 
@@ -516,8 +518,8 @@ public class Trip
    public TripStatus Status { get; set; }
    public string? CancellationReason { get; set; }
    public byte[] RowVersion { get; set; } = [];
-   public Schedule Schedule { get; set; } = null!;
-   public Bus Bus { get; set; } = null!;
+   public Schedule Schedule { get; set; } = default!;
+   public Bus Bus { get; set; } = default!;
 }
 ```
 
@@ -528,8 +530,8 @@ public class Passenger
 {
    public Guid Id { get; set; }
    public Guid? CustomerId { get; set; }
-   public string FirstName { get; set; } = null!;
-   public string LastName { get; set; } = null!;
+   public string FirstName { get; set; } = default!;
+   public string LastName { get; set; } = default!;
    public DateOnly? DateOfBirth { get; set; }
    public string? IdentificationType { get; set; }
    public string? IdentificationNumber { get; set; }
@@ -546,23 +548,23 @@ public class Passenger
 public class Booking
 {
    public Guid Id { get; set; }
-   public string BookingReference { get; set; } = null!; // Public unique reference
+   public string BookingReference { get; set; } = default!; // Public unique reference
    public Guid CustomerId { get; set; }
    public Guid TripId { get; set; }
    public Guid BoardingStopId { get; set; }
    public Guid DestinationStopId { get; set; }
    public BookingStatus Status { get; set; }
    public decimal TotalAmount { get; set; }
-   public string CurrencyCode { get; set; } = null!;
+   public string CurrencyCode { get; set; } = default!;
    public DateTimeOffset? HoldExpiresAt { get; set; }
    public DateTimeOffset CreatedAt { get; set; }
    public DateTimeOffset? ConfirmedAt { get; set; }
    public DateTimeOffset? CancelledAt { get; set; }
    public string? CancellationReason { get; set; }
-   public Customer Customer { get; set; } = null!;
-   public Trip Trip { get; set; } = null!;
-   public RouteStop BoardingStop { get; set; } = null!;
-   public RouteStop DestinationStop { get; set; } = null!;
+   public Customer Customer { get; set; } = default!;
+   public Trip Trip { get; set; } = default!;
+   public RouteStop BoardingStop { get; set; } = default!;
+   public RouteStop DestinationStop { get; set; } = default!;
    public List<BookingItem> Items { get; set; } = [];
 }
 ```
@@ -577,11 +579,11 @@ public class BookingItem
    public Guid PassengerId { get; set; }
    public Guid BusSeatId { get; set; }
    public decimal Amount { get; set; }
-   public string CurrencyCode { get; set; } = null!;
+   public string CurrencyCode { get; set; } = default!;
    public BookingItemStatus Status { get; set; }
-   public Booking Booking { get; set; } = null!;
-   public Passenger Passenger { get; set; } = null!;
-   public BusSeat BusSeat { get; set; } = null!;
+   public Booking Booking { get; set; } = default!;
+   public Passenger Passenger { get; set; } = default!;
+   public BusSeat BusSeat { get; set; } = default!;
 }
 ```
 
@@ -592,16 +594,16 @@ public class Payment
 {
    public Guid Id { get; set; }
    public Guid BookingId { get; set; }
-   public string Provider { get; set; } = null!;
-   public string IdempotencyKey { get; set; } = null!;
+   public string Provider { get; set; } = default!;
+   public string IdempotencyKey { get; set; } = default!;
    public string? ProviderTransactionId { get; set; }
    public decimal Amount { get; set; }
-   public string CurrencyCode { get; set; } = null!;
+   public string CurrencyCode { get; set; } = default!;
    public PaymentStatus Status { get; set; }
    public DateTimeOffset CreatedAt { get; set; }
    public DateTimeOffset? CompletedAt { get; set; }
    public DateTimeOffset? RefundedAt { get; set; }
-   public Booking Booking { get; set; } = null!;
+   public Booking Booking { get; set; } = default!;
 }
 ```
 
@@ -615,27 +617,28 @@ public class Notification
    public Guid? BookingId { get; set; }
    public NotificationType Type { get; set; }
    public NotificationChannel Channel { get; set; }
-   public string Recipient { get; set; } = null!;
+   public string Recipient { get; set; } = default!;
    public NotificationStatus Status { get; set; }
    public int AttemptCount { get; set; }
    public DateTimeOffset? SentAt { get; set; }
    public string? LastError { get; set; }
-   public Customer Customer { get; set; } = null!;
+   public Customer Customer { get; set; } = default!;
    public Booking? Booking { get; set; }
 }
 ```
 
 #### **15. AuditLog**
-   -->
+
+-->
 
 ```csharp
 public class AuditLog
 {
    public Guid Id { get; set; }
    public Guid? ActorUserId { get; set; }
-   public string EntityName { get; set; } = null!;
+   public string EntityName { get; set; } = default!;
    public Guid EntityId { get; set; }
-   public string Action { get; set; } = null!;
+   public string Action { get; set; } = default!;
    public string? OldValuesJson { get; set; }
    public string? NewValuesJson { get; set; }
    public DateTimeOffset CreatedAt { get; set; }
@@ -859,167 +862,167 @@ Each week below has a small goal, a daily task, a project location, and a visibl
 
 ### **WEEK 1: SOLUTION AND DOMAIN ORIENTATION**
 
-| Day | Task | Project | Output |
-|---|---|---|---|
-| Monday | Create the solution and five projects | Solution | `.sln`, Core, Application, Infrastructure, API, and Web |
-| Tuesday | Add project references and build | Solution | Correct dependency direction |
-| Wednesday | Learn classes, properties, `Guid`, nullable types, and enums | Core | Practice classes compile |
-| Thursday | Create `User`, `Customer`, and `Depot` | Core | Identity and location entities |
-| Friday | Catch up, fix compile errors, and commit | Solution | Working foundation commit |
-| Saturday | Learn LINQ filtering and projection | Core | Five simple list queries |
+| Day       | Task                                                         | Project  | Output                                                  |
+| --------- | ------------------------------------------------------------ | -------- | ------------------------------------------------------- |
+| Monday    | Create the solution and five projects                        | Solution | `.sln`, Core, Application, Infrastructure, API, and Web |
+| Tuesday   | Add project references and build                             | Solution | Correct dependency direction                            |
+| Wednesday | Learn classes, properties, `Guid`, nullable types, and enums | Core     | Practice classes compile                                |
+| Thursday  | Create `User`, `Customer`, and `Depot`                       | Core     | Identity and location entities                          |
+| Friday    | Catch up, fix compile errors, and commit                     | Solution | Working foundation commit                               |
+| Saturday  | Learn LINQ filtering and projection                          | Core     | Five simple list queries                                |
 
 **Checkpoint:** You can explain each project and why Core has no web or database dependency.
 
 ### **WEEK 2: REMAINING DOMAIN ENTITIES**
 
-| Day | Task | Project | Output |
-|---|---|---|---|
-| Monday | Create `Bus` and `BusSeat` | Core | Fleet and seat inventory |
-| Tuesday | Create `Route` and `RouteStop` | Core | Ordered route with at least two depots |
-| Wednesday | Create `Schedule` and `Trip` | Core | Recurring service and dated departure |
-| Thursday | Create `Passenger`, `Booking`, and `BookingItem` | Core | Passenger and booking relationships |
-| Friday | Create `Payment`, `Notification`, `AuditLog`, and enums | Core | Complete domain model |
-| Saturday | Review relationships and practice LINQ | Core | Queries from trips to depots |
+| Day       | Task                                                    | Project | Output                                 |
+| --------- | ------------------------------------------------------- | ------- | -------------------------------------- |
+| Monday    | Create `Bus` and `BusSeat`                              | Core    | Fleet and seat inventory               |
+| Tuesday   | Create `Route` and `RouteStop`                          | Core    | Ordered route with at least two depots |
+| Wednesday | Create `Schedule` and `Trip`                            | Core    | Recurring service and dated departure  |
+| Thursday  | Create `Passenger`, `Booking`, and `BookingItem`        | Core    | Passenger and booking relationships    |
+| Friday    | Create `Payment`, `Notification`, `AuditLog`, and enums | Core    | Complete domain model                  |
+| Saturday  | Review relationships and practice LINQ                  | Core    | Queries from trips to depots           |
 
 **Checkpoint:** All entities compile with the agreed key, time, and money types.
 
 ### **WEEK 3: APPLICATION CONTRACTS AND DEPENDENCY INJECTION**
 
-| Day | Task | Project | Output |
-|---|---|---|---|
-| Monday | Learn interfaces and dependency inversion | Application | Interface versus implementation notes |
-| Tuesday | Create search, trip, booking, and payment DTOs | Application | Request and response contracts |
-| Wednesday | Create service interfaces | Application | Depot, route, trip, booking, payment, and notification interfaces |
-| Thursday | Create validators and result/error models | Application | Predictable validation failures |
-| Friday | Register and call one sample service | API | First dependency injection example |
-| Saturday | Review DI, DTOs, and async/await | Application | One tested practice use case |
+| Day       | Task                                           | Project     | Output                                                            |
+| --------- | ---------------------------------------------- | ----------- | ----------------------------------------------------------------- |
+| Monday    | Learn interfaces and dependency inversion      | Application | Interface versus implementation notes                             |
+| Tuesday   | Create search, trip, booking, and payment DTOs | Application | Request and response contracts                                    |
+| Wednesday | Create service interfaces                      | Application | Depot, route, trip, booking, payment, and notification interfaces |
+| Thursday  | Create validators and result/error models      | Application | Predictable validation failures                                   |
+| Friday    | Register and call one sample service           | API         | First dependency injection example                                |
+| Saturday  | Review DI, DTOs, and async/await               | Application | One tested practice use case                                      |
 
 **Checkpoint:** A controller depends on an interface, not a database.
 
 ### **WEEK 4: EF CORE AND SQL SERVER BASICS**
 
-| Day | Task | Project | Output |
-|---|---|---|---|
-| Monday | Learn `DbContext`, `DbSet`, and EF Core tracking | Infrastructure | EF Core notes and example |
-| Tuesday | Install EF Core SQL Server packages | Infrastructure | Packages and connection settings |
-| Wednesday | Create `ApplicationDbContext` | Infrastructure | `DbSet` properties |
-| Thursday | Configure `Depot` with Fluent API | Infrastructure | First entity configuration |
-| Friday | Configure User, Customer, Bus, and BusSeat | Infrastructure | Keys, lengths, and relationships |
-| Saturday | Create and apply the first migration | Infrastructure | Database created from code |
+| Day       | Task                                             | Project        | Output                           |
+| --------- | ------------------------------------------------ | -------------- | -------------------------------- |
+| Monday    | Learn `DbContext`, `DbSet`, and EF Core tracking | Infrastructure | EF Core notes and example        |
+| Tuesday   | Install EF Core SQL Server packages              | Infrastructure | Packages and connection settings |
+| Wednesday | Create `ApplicationDbContext`                    | Infrastructure | `DbSet` properties               |
+| Thursday  | Configure `Depot` with Fluent API                | Infrastructure | First entity configuration       |
+| Friday    | Configure User, Customer, Bus, and BusSeat       | Infrastructure | Keys, lengths, and relationships |
+| Saturday  | Create and apply the first migration             | Infrastructure | Database created from code       |
 
 **Checkpoint:** You can save and retrieve a depot from SQL Server.
 
 ### **WEEK 5: MIGRATIONS, CONSTRAINTS, AND SEED DATA**
 
-| Day | Task | Project | Output |
-|---|---|---|---|
-| Monday | Configure routes and ordered route stops | Infrastructure | Stop indexes and constraints |
-| Tuesday | Configure schedules and trips | Infrastructure | Dates, statuses, and concurrency token |
-| Wednesday | Configure bookings, passengers, and booking items | Infrastructure | Foreign keys and indexes |
-| Thursday | Configure payments, notifications, and audit logs | Infrastructure | Money precision and audit table |
-| Friday | Add development seed data | Infrastructure | Depots, buses, routes, and trips |
-| Saturday | Test invalid data and review generated SQL | Infrastructure | Constraint failures understood |
+| Day       | Task                                              | Project        | Output                                 |
+| --------- | ------------------------------------------------- | -------------- | -------------------------------------- |
+| Monday    | Configure routes and ordered route stops          | Infrastructure | Stop indexes and constraints           |
+| Tuesday   | Configure schedules and trips                     | Infrastructure | Dates, statuses, and concurrency token |
+| Wednesday | Configure bookings, passengers, and booking items | Infrastructure | Foreign keys and indexes               |
+| Thursday  | Configure payments, notifications, and audit logs | Infrastructure | Money precision and audit table        |
+| Friday    | Add development seed data                         | Infrastructure | Depots, buses, routes, and trips       |
+| Saturday  | Test invalid data and review generated SQL        | Infrastructure | Constraint failures understood         |
 
 **Checkpoint:** A fresh database can be created entirely from migrations.
 
 ### **WEEK 6: API READ FEATURES**
 
-| Day | Task | Project | Output |
-|---|---|---|---|
-| Monday | Create depot and bus read services | Infrastructure | EF Core read use cases |
-| Tuesday | Create `DepotsController` and `BusesController` | API | GET endpoints |
-| Wednesday | Create route read service and controller | API/Infrastructure | Routes include ordered stops |
-| Thursday | Create schedule and trip read services | API/Infrastructure | Searchable dated trips |
-| Friday | Register services and test with Swagger | API | Working API responses |
-| Saturday | Practice GET requests and response DTOs | API | Saved test requests |
+| Day       | Task                                            | Project            | Output                       |
+| --------- | ----------------------------------------------- | ------------------ | ---------------------------- |
+| Monday    | Create depot and bus read services              | Infrastructure     | EF Core read use cases       |
+| Tuesday   | Create `DepotsController` and `BusesController` | API                | GET endpoints                |
+| Wednesday | Create route read service and controller        | API/Infrastructure | Routes include ordered stops |
+| Thursday  | Create schedule and trip read services          | API/Infrastructure | Searchable dated trips       |
+| Friday    | Register services and test with Swagger         | API                | Working API responses        |
+| Saturday  | Practice GET requests and response DTOs         | API                | Saved test requests          |
 
 ### **WEEK 7: API BOOKING FEATURES**
 
-| Day | Task | Project | Output |
-|---|---|---|---|
-| Monday | Add trip search by boarding depot, destination depot, and date | API | Segment-aware search |
-| Tuesday | Validate booking requests | Application/API | Invalid data rejected |
-| Wednesday | Create booking and availability endpoints | API | Booking and seat responses |
-| Thursday | Add pagination, filtering, sorting, and ProblemDetails | API | Consistent API responses |
-| Friday | Catch up and write integration tests | API | Search and booking scenarios |
-| Saturday | Practice debugging in Swagger/Postman | API | Test collection |
+| Day       | Task                                                           | Project         | Output                       |
+| --------- | -------------------------------------------------------------- | --------------- | ---------------------------- |
+| Monday    | Add trip search by boarding depot, destination depot, and date | API             | Segment-aware search         |
+| Tuesday   | Validate booking requests                                      | Application/API | Invalid data rejected        |
+| Wednesday | Create booking and availability endpoints                      | API             | Booking and seat responses   |
+| Thursday  | Add pagination, filtering, sorting, and ProblemDetails         | API             | Consistent API responses     |
+| Friday    | Catch up and write integration tests                           | API             | Search and booking scenarios |
+| Saturday  | Practice debugging in Swagger/Postman                          | API             | Test collection              |
 
 ### **WEEK 8: SEAT INVENTORY AND CONCURRENCY**
 
-| Day | Task | Project | Output |
-|---|---|---|---|
-| Monday | Calculate fares between route stops | Application | Segment fare calculation |
-| Tuesday | Query seats across overlapping segments | Application | Correct availability |
-| Wednesday | Add expiring seat holds | Application/Infrastructure | Hold expiry and release |
-| Thursday | Use a database transaction for booking creation | Infrastructure | Double-booking protection |
-| Friday | Catch up and test cancellation/rescheduling inventory | API/Application | Seats release or re-check |
-| Saturday | Learn transactions, isolation, and race conditions | Infrastructure | Race condition explained |
+| Day       | Task                                                  | Project                    | Output                    |
+| --------- | ----------------------------------------------------- | -------------------------- | ------------------------- |
+| Monday    | Calculate fares between route stops                   | Application                | Segment fare calculation  |
+| Tuesday   | Query seats across overlapping segments               | Application                | Correct availability      |
+| Wednesday | Add expiring seat holds                               | Application/Infrastructure | Hold expiry and release   |
+| Thursday  | Use a database transaction for booking creation       | Infrastructure             | Double-booking protection |
+| Friday    | Catch up and test cancellation/rescheduling inventory | API/Application            | Seats release or re-check |
+| Saturday  | Learn transactions, isolation, and race conditions    | Infrastructure             | Race condition explained  |
 
 ### **WEEK 9: PAYMENTS, WEBHOOKS, REFUNDS, AND AUDIT**
 
-| Day | Task | Project | Output |
-|---|---|---|---|
-| Monday | Create payment adapter and fake provider | Infrastructure | Testable provider boundary |
-| Tuesday | Add payment initiation and provider IDs | API/Infrastructure | No raw card data |
-| Wednesday | Add webhook verification and idempotency | API/Infrastructure | Safe repeated callbacks |
-| Thursday | Add refunds and cancellation payment states | Application/Infrastructure | Correct refund status |
-| Friday | Add audit events for success, failure, and denial | Infrastructure | Action history |
-| Saturday | Test failures, retries, refunds, and audit records | API/Infrastructure | Automated retry scenarios |
+| Day       | Task                                               | Project                    | Output                     |
+| --------- | -------------------------------------------------- | -------------------------- | -------------------------- |
+| Monday    | Create payment adapter and fake provider           | Infrastructure             | Testable provider boundary |
+| Tuesday   | Add payment initiation and provider IDs            | API/Infrastructure         | No raw card data           |
+| Wednesday | Add webhook verification and idempotency           | API/Infrastructure         | Safe repeated callbacks    |
+| Thursday  | Add refunds and cancellation payment states        | Application/Infrastructure | Correct refund status      |
+| Friday    | Add audit events for success, failure, and denial  | Infrastructure             | Action history             |
+| Saturday  | Test failures, retries, refunds, and audit records | API/Infrastructure         | Automated retry scenarios  |
 
 ### **WEEK 10: NOTIFICATIONS, TESTING, AND AUTHORIZATION FOUNDATIONS**
 
-| Day | Task | Project | Output |
-|---|---|---|---|
-| Monday | Add notification queue and retry status | Infrastructure | Confirmation/cancellation notifications |
-| Tuesday | Test route and booking domain rules | Solution/Core | Unit tests |
-| Wednesday | Create API integration-test setup | Solution/API | Test server and database strategy |
-| Thursday | Define role and ownership access matrix | Application/API | Customer/admin/operator/driver rules |
-| Friday | Add early authentication/authorization stubs | API | Initial `[Authorize]` boundaries |
-| Saturday | Review failures and repair weak tests | Solution | UI-ready test foundation |
+| Day       | Task                                         | Project         | Output                                  |
+| --------- | -------------------------------------------- | --------------- | --------------------------------------- |
+| Monday    | Add notification queue and retry status      | Infrastructure  | Confirmation/cancellation notifications |
+| Tuesday   | Test route and booking domain rules          | Solution/Core   | Unit tests                              |
+| Wednesday | Create API integration-test setup            | Solution/API    | Test server and database strategy       |
+| Thursday  | Define role and ownership access matrix      | Application/API | Customer/admin/operator/driver rules    |
+| Friday    | Add early authentication/authorization stubs | API             | Initial `[Authorize]` boundaries        |
+| Saturday  | Review failures and repair weak tests        | Solution        | UI-ready test foundation                |
 
 ### **WEEK 11: BLAZOR SEARCH AND BOOKING UI**
 
-| Day | Task | Project | Output |
-|---|---|---|---|
-| Monday | Configure `ApiClient` and API base URL | Web | Web calls API over HTTP |
-| Tuesday | Build trip search page | Web | Depot and date inputs |
-| Wednesday | Build trip cards and seat selector | Web | Times, fares, and availability |
-| Thursday | Build passenger and booking form | Web | Passenger/accessibility details |
-| Friday | Connect search, hold, and booking | Web | Selected segment reaches API |
-| Saturday | Review routing and component parameters | Web | Clean components |
+| Day       | Task                                    | Project | Output                          |
+| --------- | --------------------------------------- | ------- | ------------------------------- |
+| Monday    | Configure `ApiClient` and API base URL  | Web     | Web calls API over HTTP         |
+| Tuesday   | Build trip search page                  | Web     | Depot and date inputs           |
+| Wednesday | Build trip cards and seat selector      | Web     | Times, fares, and availability  |
+| Thursday  | Build passenger and booking form        | Web     | Passenger/accessibility details |
+| Friday    | Connect search, hold, and booking       | Web     | Selected segment reaches API    |
+| Saturday  | Review routing and component parameters | Web     | Clean components                |
 
 ### **WEEK 12: BLAZOR PAYMENT AND MANAGEMENT UI**
 
-| Day | Task | Project | Output |
-|---|---|---|---|
-| Monday | Build payment form and state display | Web | Payment success/failure feedback |
-| Tuesday | Build confirmation page | Web | Booking reference and details |
-| Wednesday | Build customer booking history | Web | Status and trip details |
-| Thursday | Add cancellation and rescheduling UI | Web | Refund result and new trip |
-| Friday | Add loading, validation, and API error states | Web | Clear request feedback |
-| Saturday | Test the complete browser workflow | Web | Search → hold → pay → confirm |
+| Day       | Task                                          | Project | Output                           |
+| --------- | --------------------------------------------- | ------- | -------------------------------- |
+| Monday    | Build payment form and state display          | Web     | Payment success/failure feedback |
+| Tuesday   | Build confirmation page                       | Web     | Booking reference and details    |
+| Wednesday | Build customer booking history                | Web     | Status and trip details          |
+| Thursday  | Add cancellation and rescheduling UI          | Web     | Refund result and new trip       |
+| Friday    | Add loading, validation, and API error states | Web     | Clear request feedback           |
+| Saturday  | Test the complete browser workflow            | Web     | Search → hold → pay → confirm    |
 
 ### **WEEK 13: SECURITY, OPERATIONS, AND PRIVACY**
 
-| Day | Task | Project | Output |
-|---|---|---|---|
-| Monday | Configure ASP.NET Core Identity and login | API/Web | Secure authentication |
-| Tuesday | Complete role-based authorization | API/Web | Role permissions |
-| Wednesday | Add rate limiting and input validation | API | Abuse protection |
-| Thursday | Add health checks, logs, and metrics | API | Operational visibility |
-| Friday | Add privacy, retention, and secret-management rules | Solution | No secrets in source control |
-| Saturday | Test authorization and privacy boundaries | Solution | Access tests |
+| Day       | Task                                                | Project  | Output                       |
+| --------- | --------------------------------------------------- | -------- | ---------------------------- |
+| Monday    | Configure ASP.NET Core Identity and login           | API/Web  | Secure authentication        |
+| Tuesday   | Complete role-based authorization                   | API/Web  | Role permissions             |
+| Wednesday | Add rate limiting and input validation              | API      | Abuse protection             |
+| Thursday  | Add health checks, logs, and metrics                | API      | Operational visibility       |
+| Friday    | Add privacy, retention, and secret-management rules | Solution | No secrets in source control |
+| Saturday  | Test authorization and privacy boundaries           | Solution | Access tests                 |
 
 ### **WEEK 14: DEPLOYMENT AND RELEASE BUFFER**
 
-| Day | Task | Project | Output |
-|---|---|---|---|
-| Monday | Configure development and production settings | API/Web | Environment configuration |
-| Tuesday | Add and test database backup and restore | Infrastructure | Recovery procedure |
-| Wednesday | Configure CI and automated tests | Solution | Build on every push |
-| Thursday | Publish API and Blazor Web App | API/Web | Deployment packages |
-| Friday | Run acceptance tests and fix remaining issues | Solution | Release checklist |
-| Saturday | Document the system and use the final buffer | Solution | README and v1.0 preparation |
+| Day       | Task                                          | Project        | Output                      |
+| --------- | --------------------------------------------- | -------------- | --------------------------- |
+| Monday    | Configure development and production settings | API/Web        | Environment configuration   |
+| Tuesday   | Add and test database backup and restore      | Infrastructure | Recovery procedure          |
+| Wednesday | Configure CI and automated tests              | Solution       | Build on every push         |
+| Thursday  | Publish API and Blazor Web App                | API/Web        | Deployment packages         |
+| Friday    | Run acceptance tests and fix remaining issues | Solution       | Release checklist           |
+| Saturday  | Document the system and use the final buffer  | Solution       | README and v1.0 preparation |
 
 **By end of Week 14:** Production-ready release candidate + GitHub commit "Prepare v1.0 release".
 
@@ -1030,7 +1033,7 @@ Each week below has a small goal, a daily task, a project location, and a visibl
 
 ### **WEEK 1: Foundation (LINQ + Lambda mastery)**
 
-**Saturday 8am-12pm:** Learn LINQ + Lambda (from Phase 1 outline)  
+**Saturday 8am-12pm:** Learn LINQ + Lambda (from Phase 1 outline)
 **Mon-Fri 3:30-6am:** Build domain models
 
 | Day | Task | Time | Output |
@@ -1163,23 +1166,27 @@ Each week below has a small goal, a daily task, a project location, and a visibl
 ### **When Starting Each Task, Ask:**
 
 **1. What is the smallest piece I can build?**
-   - Not: "Build booking system"
-   - But: "Create Bus model (30 lines)"
+
+- Not: "Build booking system"
+- But: "Create Bus model (30 lines)"
 
 **2. Can I test it immediately?**
-   - Add println statements
-   - Use Postman for API endpoints
-   - Use browser for Blazor pages
+
+- Add println statements
+- Use Postman for API endpoints
+- Use browser for Blazor pages
 
 **3. Can I commit it to GitHub?**
-   - Each 2.5-hour session = one commit
-   - Meaningful commit message
-   - Working code, no broken branches
+
+- Each 2.5-hour session = one commit
+- Meaningful commit message
+- Working code, no broken branches
 
 **4. Does it solve a real problem?**
-   - Monday: Can I query buses? YES
-   - Tuesday: Can I query routes? YES
-   - Each task is complete, not half-done
+
+- Monday: Can I query buses? YES
+- Tuesday: Can I query routes? YES
+- Each task is complete, not half-done
 
 ### **Session Structure (2.5 hours)**
 
@@ -1210,13 +1217,13 @@ Each week below has a small goal, a daily task, a project location, and a visibl
 
 In Solution Explorer, right-click **Dependencies** for each project, select **Add Project Reference**, and use this dependency direction:
 
-| Project | References |
-|---|---|
-| `BusBookingSystem.Core` | None |
-| `BusBookingSystem.Application` | `BusBookingSystem.Core` |
-| `BusBookingSystem.Infrastructure` | `BusBookingSystem.Core`, `BusBookingSystem.Application` |
-| `BusBookingSystem.API` | `BusBookingSystem.Application`, `BusBookingSystem.Infrastructure` |
-| `BusBookingSystem.Web` | None; call the API with `HttpClient` |
+| Project                           | References                                                        |
+| --------------------------------- | ----------------------------------------------------------------- |
+| `BusBookingSystem.Core`           | None                                                              |
+| `BusBookingSystem.Application`    | `BusBookingSystem.Core`                                           |
+| `BusBookingSystem.Infrastructure` | `BusBookingSystem.Core`, `BusBookingSystem.Application`           |
+| `BusBookingSystem.API`            | `BusBookingSystem.Application`, `BusBookingSystem.Infrastructure` |
+| `BusBookingSystem.Web`            | None; call the API with `HttpClient`                              |
 
 Do not add references from Core to API, Infrastructure, or Web. The Web project must not access `ApplicationDbContext` directly.
 
@@ -1258,10 +1265,10 @@ namespace BusBookingSystem.Core.Entities;
 public class Bus
 {
    public Guid Id { get; set; }
-   public string FleetNumber { get; set; } = null!;
-   public string Model { get; set; } = null!;
+   public string FleetNumber { get; set; } = default!;
+   public string Model { get; set; } = default!;
    public int Capacity { get; set; }
-   public string RegistrationNumber { get; set; } = null!;
+   public string RegistrationNumber { get; set; } = default!;
    public int ManufactureYear { get; set; }
    public bool IsAccessible { get; set; }
    public bool IsActive { get; set; } = true;
@@ -1303,32 +1310,38 @@ git commit -m "Create bus booking solution structure"
 ## **KEY PRINCIPLES**
 
 **1. Build incrementally**
+
 - Each day = one complete, testable feature
 - Not 5 incomplete features spread across week
 
 **2. Test constantly**
+
 - After every 50 lines of code, test
 - Console.WriteLine is your friend
 - Postman for API testing
 
 **3. Commit frequently**
+
 - Monday: 1 commit
 - Tuesday: 1 commit
 - By Friday: 5 commits
 - By Week 14: 70+ commits
 
 **4. Learn by doing**
+
 - Don't watch course → build
 - Watch 1 lecture → code 1 feature → test it
 - Repeat
 
 **5. One task per session**
+
 - Not "build API and database"
 - But "create BusController.cs with GET endpoint"
 
 ---
 
 **You now have:**
+
 - ✅ Architecture design
 - ✅ 14-week detailed task breakdown
 - ✅ Session-by-session what to build

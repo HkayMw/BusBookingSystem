@@ -4,9 +4,9 @@ namespace BusBookingSystem.Application.DTOs
     public class TripListResultDto
     {
         public Guid TripId { get; set; }
-        //public string Bus { get; set; } = null!; 
-        public string OriginDepotName { get; set; } = null!;
-        public string DestinationDepotName { get; set; } = null!;
+        //public string Bus { get; set; } = default!; 
+        public string OriginDepotName { get; set; } = default!;
+        public string DestinationDepotName { get; set; } = default!;
         public DateTimeOffset DepartureTime { get; set; }
         public DateTimeOffset? ArrivalTime { get; set; }
         public decimal SeatFare { get; set; }

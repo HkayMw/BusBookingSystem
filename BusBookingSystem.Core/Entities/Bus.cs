@@ -17,8 +17,8 @@ namespace BusBookingSystem.Core.Entities
         public required int ManufactureYear { get; set; }
         public BusStatus BusStatus { get; set; }
         public Guid HomeDepotId { get; set; }
-        public Depot HomeDepot { get; set; } = null!;
-        public byte[] RowVersion { get; set; } = null!;
+        public Depot HomeDepot { get; set; } = default!;
+        public byte[] RowVersion { get; set; } = default!;
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset? UpdatedAt { get; set; }
 

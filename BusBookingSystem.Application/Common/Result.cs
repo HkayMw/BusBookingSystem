@@ -7,20 +7,39 @@ namespace BusBookingSystem.Application.Common
         public TData? Data { get; init; }
         public object? Errors { get; init; }
 
-        public bool Success => Status == ResultStatus.Success;
+        public bool Success { get; set; }
 
         public static Result<TData> Ok(TData? data, string? message = null) =>
             new()
             {
+                Success = true,
                 Status = ResultStatus.Success,
                 Message = message,
                 Data = data
             };
 
-        public static Result<TData> Invalid(string message, object? errors = null) =>
+        public static Result<TData> Created(TData? data, string? message = null) =>
             new()
             {
-                Status = ResultStatus.ValidationError,
+                Success = true,
+                Status = ResultStatus.Created,
+                Message = message,
+                Data = data
+            };
+
+        public static Result<TData> NoContent(TData? data, string? message = null) =>
+            new()
+            {
+                Success = true,
+                Status = ResultStatus.NoContent,
+                Message = message,
+            };
+
+        public static Result<TData> BadRequest(string message, object? errors = null) =>
+            new()
+            {
+                Success = false,
+                Status = ResultStatus.BadRequest,
                 Message = message,
                 Errors = errors
             };
@@ -28,6 +47,7 @@ namespace BusBookingSystem.Application.Common
         public static Result<TData> NotFound(string message) =>
             new()
             {
+                Success = false,
                 Status = ResultStatus.NotFound,
                 Message = message
             };
@@ -35,7 +55,26 @@ namespace BusBookingSystem.Application.Common
         public static Result<TData> Conflict(string message, object? errors = null) =>
             new()
             {
+                Success = false,
                 Status = ResultStatus.Conflict,
+                Message = message,
+                Errors = errors
+            };
+
+        public static Result<TData> UnAuthorized(string message, object? errors = null) =>
+            new()
+            {
+                Success = false,
+                Status = ResultStatus.UnAuthorized,
+                Message = message,
+                Errors = errors
+            };
+
+        public static Result<TData> Forbidden(string message, object? errors = null) =>
+            new()
+            {
+                Success = false,
+                Status = ResultStatus.Forbidden,
                 Message = message,
                 Errors = errors
             };
@@ -43,6 +82,7 @@ namespace BusBookingSystem.Application.Common
         public static Result<TData> Unexpected(string message, object? errors = null) =>
             new()
             {
+                Success = false,
                 Status = ResultStatus.Unexpected,
                 Message = message,
                 Errors = errors

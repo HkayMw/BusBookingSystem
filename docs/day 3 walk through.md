@@ -133,9 +133,9 @@ public class TripSearchResultDto
 {
     public Guid TripId { get; set; }
     public Guid RouteId { get; set; }
-    public string BusName { get; set; } = null!;
-    public string OriginName { get; set; } = null!;
-    public string DestinationName { get; set; } = null!;
+    public string BusName { get; set; } = default!;
+    public string OriginName { get; set; } = default!;
+    public string DestinationName { get; set; } = default!;
     public DateTime DepartureTime { get; set; }
     public DateTime? ArrivalTime { get; set; }
     public decimal BaseFare { get; set; }

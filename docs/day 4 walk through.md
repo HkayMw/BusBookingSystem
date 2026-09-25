@@ -84,9 +84,9 @@ public class Trip
 {
     public Guid Id { get; set; }
     public Guid BusId { get; set; }
-    public Bus Bus { get; set; } = null!;
+    public Bus Bus { get; set; } = default!;
     public Guid RouteId { get; set; }
-    public Route Route { get; set; } = null!;
+    public Route Route { get; set; } = default!;
     public required decimal SeatFare { get; set; }
     public decimal? CargoFare { get; set; }
     public int SeatsBooked { get; set; }
