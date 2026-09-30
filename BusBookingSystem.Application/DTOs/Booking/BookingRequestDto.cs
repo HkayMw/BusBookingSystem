@@ -1,11 +1,13 @@
-﻿
-namespace BusBookingSystem.Application.DTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+public class BookingRequestDto
 {
-    public class BookingRequestDto
-    {
-        // public Guid UserId { get; set; }
-        public Guid TripId { get; set; }
-        public int NumberOfSeats { get; set; }
-        public int CargoWeight { get; set; } // TODO: consider cargo volume
-    }
+    [Required]
+    public Guid TripId { get; set; }
+
+    [Range(0, int.MaxValue)]
+    public int NumberOfSeats { get; set; }
+
+    [Range(0, int.MaxValue)]
+    public int CargoWeight { get; set; }
 }

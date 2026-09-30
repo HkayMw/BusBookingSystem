@@ -108,7 +108,7 @@ namespace BusBookingSystem.Infrastructure.Services
                 if (user is null)
                 {
 
-                    return Result<AuthResponseDto>.NotFound("No user exist with provided email.");
+                    return Result<AuthResponseDto>.UnAuthorized("No user exist with provided email.");
                 }
 
                 // check password 
@@ -138,7 +138,7 @@ namespace BusBookingSystem.Infrastructure.Services
             catch (Exception e)
             {
                 //throw new InvalidOperationException("An unxpected error occured during user log in.", e);
-                return Result<AuthResponseDto>.Unexpected("Error occured during user login");
+                return Result<AuthResponseDto>.Unexpected("Error occured during user login", e.Message);
 
 
             }

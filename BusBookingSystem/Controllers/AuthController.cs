@@ -2,6 +2,7 @@
 using BusBookingSystem.API.Models;
 using BusBookingSystem.Application.DTOs;
 using BusBookingSystem.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BusBookingSystem.API.Controllers
@@ -18,6 +19,7 @@ namespace BusBookingSystem.API.Controllers
         }
 
         [HttpPost("register")]
+        [EndpointSummary("Register a new customer account.")]
         [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
@@ -34,6 +36,7 @@ namespace BusBookingSystem.API.Controllers
         }
 
         [HttpPost("login")]
+        [EndpointSummary("Authenticate a customer and issue a JWT.")]
         [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]

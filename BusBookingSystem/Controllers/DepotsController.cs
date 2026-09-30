@@ -4,6 +4,7 @@ using BusBookingSystem.API.Models;
 using BusBookingSystem.API.Extensions;
 using BusBookingSystem.Application.DTOs;
 using BusBookingSystem.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BusBookingSystem.API.Controllers
@@ -15,6 +16,7 @@ namespace BusBookingSystem.API.Controllers
         private readonly IDepotService _depotService = depotService;
 
         [HttpGet]
+        [EndpointSummary("Get active depots for trip search.")]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<DepotListDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<ApiResponse<IEnumerable<DepotListDto>>>> GetActiveDepots()

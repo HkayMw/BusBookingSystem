@@ -2,6 +2,11 @@
   <Project Path="BusBookingSystem.Application/BusBookingSystem.Application.csproj" />
   <Project Path="BusBookingSystem.Core/BusBookingSystem.Core.csproj" Id="5f61542c-1087-4565-a720-205a946a28fb" />
   <Project Path="BusBookingSystem.Infrastructure/BusBookingSystem.Infrastructure.csproj" />
+  <Project Path="BusBookingSystem.Tests/BusBookingSystem.Tests.csproj" Id="dc08c4df-a7c6-4f75-bc34-0543ecf0dc9e">
+    <BuildDependency Project="BusBookingSystem.Application/BusBookingSystem.Application.csproj" />
+    <BuildDependency Project="BusBookingSystem.Core/BusBookingSystem.Core.csproj" />
+    <BuildDependency Project="BusBookingSystem.Infrastructure/BusBookingSystem.Infrastructure.csproj" />
+  </Project>
   <Project Path="BusBookingSystem.Web/BusBookingSystem.Web.csproj" />
   <Project Path="BusBookingSystem/BusBookingSystem.API.csproj">
     <BuildDependency Project="BusBookingSystem.Application/BusBookingSystem.Application.csproj" />
