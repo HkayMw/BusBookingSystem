@@ -36,7 +36,7 @@ dotnet ef migrations add <Name> --project BusBookingSystem.Infrastructure --star
 dotnet ef database update      --project BusBookingSystem.Infrastructure --startup-project BusBookingSystem.API
 ```
 
-The connection string (`DefaultConnection`, local SQLEXPRESS) and `JwtSettings:Secret` are in [BusBookingSystem.API/appsettings.json](BusBookingSystem.API/appsettings.json). The API will not start if the JWT secret is missing.
+The connection string (`DefaultConnection`, local SQLEXPRESS) is in [BusBookingSystem.API/appsettings.json](BusBookingSystem.API/appsettings.json). `JwtSettings:Secret` is deliberately empty there. Set it with `dotnet user-secrets set "JwtSettings:Secret" "<at least 32 bytes>" --project BusBookingSystem.API` in development, or with the `JwtSettings__Secret` environment variable elsewhere. The API will not start if the secret is missing or shorter than 32 bytes. Never commit a real secret.
 
 ## Architecture
 
