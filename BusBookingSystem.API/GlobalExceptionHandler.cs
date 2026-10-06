@@ -1,5 +1,4 @@
 ﻿using BusBookingSystem.API.Models;
-using BusBookingSystem.Application.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 
 namespace BusBookingSystem.API
@@ -17,8 +16,6 @@ namespace BusBookingSystem.API
             var statusCode = exception switch
             {
                 ArgumentException => StatusCodes.Status400BadRequest,
-                ResourceNotFoundException => StatusCodes.Status404NotFound,
-                BookingConflictException => StatusCodes.Status409Conflict,
                 _ => StatusCodes.Status500InternalServerError
             };
 
@@ -27,8 +24,6 @@ namespace BusBookingSystem.API
             var message = statusCode switch
             {
                 StatusCodes.Status400BadRequest => exception.Message,
-                StatusCodes.Status404NotFound => exception.Message,
-                StatusCodes.Status409Conflict => exception.Message,
                 _ => "An unexpected error occurred."
             };
 

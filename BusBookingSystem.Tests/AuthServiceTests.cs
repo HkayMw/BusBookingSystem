@@ -4,6 +4,7 @@ using BusBookingSystem.Application.DTOs;
 using BusBookingSystem.Core.Entities;
 using BusBookingSystem.Core.Enums;
 using BusBookingSystem.Infrastructure.Data;
+using BusBookingSystem.Infrastructure.Mapping;
 using BusBookingSystem.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -162,12 +163,7 @@ public class AuthServiceTests
 
     private static AuthService CreateService(AppDbContext context)
     {
-        // Same maps as the API registers in Program.cs.
-        var mapper = new MapperConfiguration(cfg =>
-        {
-            cfg.CreateMap<UserRegisterRequestDto, User>();
-            cfg.CreateMap<User, UserDto>();
-        }, NullLoggerFactory.Instance).CreateMapper();
+        var mapper = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>(), NullLoggerFactory.Instance).CreateMapper();
 
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>

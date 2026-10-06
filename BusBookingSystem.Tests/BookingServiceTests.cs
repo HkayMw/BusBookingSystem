@@ -1,4 +1,5 @@
 using BusBookingSystem.Application.Common;
+using BusBookingSystem.Application.DTOs;
 using BusBookingSystem.Core.Entities;
 using BusBookingSystem.Core.Enums;
 using BusBookingSystem.Infrastructure.Data;
@@ -216,7 +217,7 @@ public class BookingServiceTests
 
         // Assert
         Assert.True(result.Success);
-        Assert.Equal(ResultStatus.Success, result.Status);
+        Assert.Equal(ResultStatus.Created, result.Status);
         Assert.NotNull(result.Data);
 
         var response = result.Data!;

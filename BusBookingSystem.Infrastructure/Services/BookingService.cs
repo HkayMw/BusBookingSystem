@@ -1,7 +1,6 @@
 ﻿
 using BusBookingSystem.Application.Common;
 using BusBookingSystem.Application.DTOs;
-using BusBookingSystem.Application.Exceptions;
 using BusBookingSystem.Application.Interfaces.Services;
 using BusBookingSystem.Core.Entities;
 using BusBookingSystem.Infrastructure.Data;
@@ -117,7 +116,6 @@ namespace BusBookingSystem.Infrastructure.Services
                     CargoWeight = requestDto.CargoWeight,
                     BookingReference = bookingReference,
                     BookingStatus = BusBookingSystem.Core.Enums.BookingStatus.Confirmed,
-                    User = await _context.Set<User>().FirstAsync(u => u.Id == userId),
                     Trip = trip
                 };
 
@@ -136,7 +134,7 @@ namespace BusBookingSystem.Infrastructure.Services
                 var seatsFare = trip.SeatFare * booking.NumberOfSeats;
                 var cargoFare = (trip.CargoFare ?? 0m) * booking.CargoWeight;
 
-                return Result<BookingResponseDto>.Ok(new BookingResponseDto
+                return Result<BookingResponseDto>.Created(new BookingResponseDto
                 {
                     BookingId = booking.Id,
                     BookingReference = booking.BookingReference,

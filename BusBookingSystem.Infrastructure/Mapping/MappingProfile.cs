@@ -8,7 +8,7 @@ namespace BusBookingSystem.Infrastructure.Mapping
     {
         public MappingProfile()
         {
-            CreateMap<Trip, TripDto>();
+            CreateMap<UserRegisterRequestDto, User>();
             CreateMap<User, UserDto>();
         }
     }

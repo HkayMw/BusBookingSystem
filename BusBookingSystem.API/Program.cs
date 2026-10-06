@@ -1,9 +1,8 @@
 using BusBookingSystem.API;
 using BusBookingSystem.API.Models;
-using BusBookingSystem.Application.DTOs;
 using BusBookingSystem.Application.Interfaces.Services;
-using BusBookingSystem.Core.Entities;
 using BusBookingSystem.Infrastructure.Data;
+using BusBookingSystem.Infrastructure.Mapping;
 using BusBookingSystem.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -64,12 +63,7 @@ builder.Services.AddScoped<ITripService, TripService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
-//builder.Services.AddAutoMapper(typeof(MappingProfile));
-builder.Services.AddAutoMapper(o =>
-{
-    o.CreateMap<UserRegisterRequestDto, User>();
-    o.CreateMap<User, UserDto>();
-});
+builder.Services.AddAutoMapper(o => o.AddProfile<MappingProfile>());
 
 builder.Services.AddOpenApi(options =>
 {
@@ -119,10 +113,6 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
             });
     };
 });
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
