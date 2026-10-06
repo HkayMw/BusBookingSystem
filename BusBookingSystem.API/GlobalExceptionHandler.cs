@@ -13,26 +13,17 @@ namespace BusBookingSystem.API
         {
             logger.LogError(exception, "Unhandled exception occurred");
 
-            var statusCode = exception switch
-            {
-                ArgumentException => StatusCodes.Status400BadRequest,
-                _ => StatusCodes.Status500InternalServerError
-            };
-
+            // Expected failures are returned as Result<T> by services, so anything reaching here is a server error.
+            // Never echo exception.Message: it can contain internal details. The full exception is logged above.
+            const int statusCode = StatusCodes.Status500InternalServerError;
             httpContext.Response.StatusCode = statusCode;
-
-            var message = statusCode switch
-            {
-                StatusCodes.Status400BadRequest => exception.Message,
-                _ => "An unexpected error occurred."
-            };
 
             await httpContext.Response.WriteAsJsonAsync(
                 new ApiResponse<object>
                 {
                     Success = false,
                     StatusCode = statusCode,
-                    Message = message
+                    Message = "An unexpected error occurred."
                 },
                 cancellationToken);
 

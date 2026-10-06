@@ -146,6 +146,12 @@ namespace BusBookingSystem.Infrastructure.Services
                     TotalFare = seatsFare + cargoFare
                 }, "Booking created successfully.");
             }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Trip.RowVersion changed after we read it: another booking took capacity first.
+                await transaction.RollbackAsync();
+                return Result<BookingResponseDto>.Conflict("This trip was just updated by another booking. Please check availability and try again.");
+            }
             catch
             {
                 await transaction.RollbackAsync();

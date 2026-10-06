@@ -29,6 +29,7 @@ Solution file: `BusBookingSystem.slnx`
 dotnet build BusBookingSystem.slnx
 dotnet test BusBookingSystem.Tests
 dotnet test BusBookingSystem.Tests --filter "FullyQualifiedName~TripServiceTests"   # single class
+dotnet test BusBookingSystem.Tests --filter "Category!=SqlServer"                  # skip SQL Server tests
 dotnet run --project BusBookingSystem.API/BusBookingSystem.API.csproj                 # Scalar UI at /scalar in Development
 
 # EF Core migrations (Infrastructure holds migrations, API is the startup project)
@@ -67,7 +68,7 @@ Controller  ->  I*Service (Application)  ->  *Service (Infrastructure)  ->  AppD
 - **No repository pattern.** Services inject `AppDbContext` directly. Do not add repository interfaces or classes.
 - **Services return `Result<T>`** ([Application/Common/Result.cs](BusBookingSystem.Application/Common/Result.cs)) and use the factory methods: `Ok`, `Created`, `NoContent`, `BadRequest`, `NotFound`, `Conflict`, `UnAuthorized`, `Forbidden`, `Unexpected`. Expected failures such as validation, not-found, and capacity conflicts are returned as `Result`, not thrown.
 - **Controllers stay thin.** They call the service, convert the result with `result.ToApiResponse()` ([Extensions/ResultExtensions.cs](BusBookingSystem.API/Extensions/ResultExtensions.cs)), and return `StatusCode(response.StatusCode, response.Body)`. They contain no business logic and no DbContext access.
-- **Uniform response envelope:** every response, including errors, is an `ApiResponse<T>` with `Success`, `StatusCode`, `Message`, `Data`, `Errors`, and `Timestamp`. Model-validation failures are wrapped by the `InvalidModelStateResponseFactory` in Program.cs. Unhandled exceptions go through [GlobalExceptionHandler.cs](BusBookingSystem.API/GlobalExceptionHandler.cs), which maps `ArgumentException` to 400 and anything else to 500 with a generic message. Services do not throw for expected failures.
+- **Uniform response envelope:** every response, including errors, is an `ApiResponse<T>` with `Success`, `StatusCode`, `Message`, `Data`, `Errors`, and `Timestamp`. Model-validation failures are wrapped by the `InvalidModelStateResponseFactory` in Program.cs. Unhandled exceptions go through [GlobalExceptionHandler.cs](BusBookingSystem.API/GlobalExceptionHandler.cs), which logs the exception and returns a generic 500. It never echoes `exception.Message`. Services do not throw for expected failures.
 - **DTOs are designed from the use case, not copied from the entity.** Include only the fields the client needs, such as IDs needed in a later request and display names. Never expose entities, navigation graphs, audit fields, or password hashes.
 - **Read queries project directly to DTOs** with LINQ `.Select(...)` and `.AsNoTracking()` (see [TripService.cs](BusBookingSystem.Infrastructure/Services/TripService.cs)). AutoMapper is used only in `AuthService` for `User` mapping; its maps live in [MappingProfile.cs](BusBookingSystem.Infrastructure/Mapping/MappingProfile.cs), which Program.cs and the tests both register. Prefer explicit projection or manual mapping for new code.
 - **Writes that check and change capacity run inside a transaction** (`BeginTransactionAsync`, then roll back on every early return or exception). See `BookingService.CreateBookingAsync`. `Trip` and `Booking` have `RowVersion` concurrency tokens.
@@ -95,9 +96,11 @@ Match the existing code:
 - Collections returned from services are `IReadOnlyList<T>`.
 - Use `is null` / `is not null` rather than `== null`.
 - **Tests:** xUnit `[Fact]`, names like `MethodName_ExpectedBehavior` (`GetActiveDepotsAsync_OnlyReturnsActiveDepots`), explicit `// Arrange / // Act / // Assert` sections, and a fresh `UseInMemoryDatabase(Guid.NewGuid().ToString())` per test. Tests call Infrastructure services directly against `AppDbContext`. The InMemory provider does not support transactions or SQL check constraints, so behavior that depends on them needs a relational or SQLite setup. When testing services that open a transaction, add `.ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))`. InMemory also does not generate `RowVersion`, so seeded entities set it by hand and service-created ones need a `SavingChanges` hook (see [BookingServiceTests.cs](BusBookingSystem.Tests/BookingServiceTests.cs)).
+- **Test suites:**
+  - Service tests (root of `BusBookingSystem.Tests/`) use EF InMemory.
+  - `Api/` uses `WebApplicationFactory<Program>` (`BookingApiFactory`) with a test JWT secret and InMemory database, so it needs no user secrets.
+  - `SqlServer/` runs against a throwaway database created and migrated by `SqlServerDatabaseFixture`, then dropped. The server comes from the `BUSBOOKING_TEST_SQLSERVER` env var, defaulting to `(local)\SQLEXPRESS`. These tests use `[SkippableFact]` and skip when no server is reachable. Concurrency, transactions and check constraints belong here.
 
 ## Known issues / gotchas
 
-- The original JWT secret is in git history (commits before `581ce6b`). Treat it as leaked and never reuse it.
-- `GlobalExceptionHandler` returns `exception.Message` for any `ArgumentException`, which could expose framework-internal text.
-- No API-level test proves an anonymous booking request gets 401. Transactions, `RowVersion` conflicts and SQL check constraints are untested because the InMemory provider does not support them.
+- The original JWT secret is in pushed git history (`origin/master`, commits up to `a58e7c2`). It has been rotated out; treat it as public and never reuse it.
