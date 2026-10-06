@@ -14,9 +14,11 @@ namespace BusBookingSystem.Infrastructure.Data.Configurations
             booking.HasKey(b => b.Id);
             booking.Property(b => b.NumberOfSeats)
                 .IsRequired();
+            booking.Property(b => b.CargoWeight)
+                .IsRequired();
             booking.Property(b => b.BookingReference)
                 .IsRequired()
-                .HasMaxLength(10);
+                .HasMaxLength(30);
             booking.Property(b => b.BookingStatus)
                 .IsRequired();
             booking.Property(b => b.RowVersion)
@@ -41,7 +43,8 @@ namespace BusBookingSystem.Infrastructure.Data.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Enforce data integrity with check constraints
-            booking.ToTable(b => b.HasCheckConstraint("CK_Booking_NumberOfSeats_greaterThanZero", "[NumberOfSeats] > 0"));
+            booking.ToTable(b => b.HasCheckConstraint("CK_Booking_NumberOfSeats_greaterThanZero", "[NumberOfSeats] >= 0"));
+            booking.ToTable(b => b.HasCheckConstraint("CK_Booking_CargoWeight_NonNegative", "[CargoWeight] >= 0"));
 
             // Indexes for performance optimization
             booking.HasIndex(b => b.BookingReference).IsUnique();

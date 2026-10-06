@@ -105,16 +105,16 @@ namespace BusBookingSystem.Infrastructure.Services
                 // retrieve user
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userLoginRequestDto.Email);
 
+                // same message for unknown email and wrong password, so login does not reveal which emails are registered
                 if (user is null)
                 {
-
-                    return Result<AuthResponseDto>.UnAuthorized("No user exist with provided email.");
+                    return Result<AuthResponseDto>.UnAuthorized("Invalid email or password.");
                 }
 
-                // check password 
+                // check password
                 if (new PasswordHasher<User>().VerifyHashedPassword(user, user.PasswordHash, userLoginRequestDto.Password) == PasswordVerificationResult.Failed)
                 {
-                    return Result<AuthResponseDto>.UnAuthorized("Wrong password.");
+                    return Result<AuthResponseDto>.UnAuthorized("Invalid email or password.");
                 }
 
                 // map entity to response dto

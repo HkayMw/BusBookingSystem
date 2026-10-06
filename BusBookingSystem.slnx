@@ -8,7 +8,7 @@
     <BuildDependency Project="BusBookingSystem.Infrastructure/BusBookingSystem.Infrastructure.csproj" />
   </Project>
   <Project Path="BusBookingSystem.Web/BusBookingSystem.Web.csproj" />
-  <Project Path="BusBookingSystem/BusBookingSystem.API.csproj">
+  <Project Path="BusBookingSystem.API/BusBookingSystem.API.csproj">
     <BuildDependency Project="BusBookingSystem.Application/BusBookingSystem.Application.csproj" />
     <BuildDependency Project="BusBookingSystem.Infrastructure/BusBookingSystem.Infrastructure.csproj" />
   </Project>

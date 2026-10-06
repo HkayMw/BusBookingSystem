@@ -1,6 +1,11 @@
-@BusBookingSystem.API_HostAddress = http://localhost:5205
+@BusBookingSystem.API_HostAddress = http://localhost:5267
 
-GET {{BusBookingSystem.API_HostAddress}}/weatherforecast/
+GET {{BusBookingSystem.API_HostAddress}}/api/depots
+Accept: application/json
+
+###
+
+GET {{BusBookingSystem.API_HostAddress}}/api/trips
 Accept: application/json
 
 ###

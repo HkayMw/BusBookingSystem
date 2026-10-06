@@ -108,6 +108,7 @@ namespace BusBookingSystem.Infrastructure.Services
                     UserId = userId,
                     TripId = requestDto.TripId,
                     NumberOfSeats = requestDto.NumberOfSeats,
+                    CargoWeight = requestDto.CargoWeight,
                     BookingReference = bookingReference,
                     BookingStatus = BusBookingSystem.Core.Enums.BookingStatus.Confirmed,
                     User = await _context.Set<User>().FirstAsync(u => u.Id == userId),
@@ -136,7 +137,7 @@ namespace BusBookingSystem.Infrastructure.Services
                     BookingReference = booking.BookingReference,
                     TripSummary = $"{trip.Route.Origin.Name} → {trip.Route.Destination.Name} on {trip.DepartureTime:ddd, dd MMM yyyy}",
                     NumberOfSeats = booking.NumberOfSeats,
-                    CargoWeight = requestDto.CargoWeight,
+                    CargoWeight = booking.CargoWeight,
                     SeatsFare = seatsFare,
                     CargoFare = cargoFare,
                     TotalFare = seatsFare + cargoFare

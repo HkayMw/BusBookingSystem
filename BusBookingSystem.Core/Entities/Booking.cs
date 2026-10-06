@@ -10,6 +10,7 @@ namespace BusBookingSystem.Core.Entities
         public Guid TripId { get; set; }
         public required Trip Trip { get; set; }
         public required int NumberOfSeats { get; set; }
+        public int CargoWeight { get; set; }
         public required string BookingReference { get; set; } // TODO: Generate a unique booking reference
         public BookingStatus BookingStatus { get; set; }
         public byte[] RowVersion { get; set; } = default!;

@@ -30,10 +30,13 @@ namespace BusBookingSystem.Infrastructure.Migrations
 
                     b.Property<string>("BookingReference")
                         .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<int>("BookingStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CargoWeight")
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -70,7 +73,9 @@ namespace BusBookingSystem.Infrastructure.Migrations
 
                     b.ToTable("Bookings", t =>
                         {
-                            t.HasCheckConstraint("CK_Booking_NumberOfSeats_greaterThanZero", "[NumberOfSeats] > 0");
+                            t.HasCheckConstraint("CK_Booking_CargoWeight_NonNegative", "[CargoWeight] >= 0");
+
+                            t.HasCheckConstraint("CK_Booking_NumberOfSeats_greaterThanZero", "[NumberOfSeats] >= 0");
                         });
                 });
 
