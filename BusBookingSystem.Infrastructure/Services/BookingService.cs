@@ -93,6 +93,12 @@ namespace BusBookingSystem.Infrastructure.Services
                         return Result<BookingResponseDto>.Conflict("This bus does not support cargo bookings.");
                     }
 
+                    if (trip.CargoFare is null)
+                    {
+                        await transaction.RollbackAsync();
+                        return Result<BookingResponseDto>.Conflict("Cargo bookings are not available for this trip.");
+                    }
+
                     var availableCargoCapacity = trip.Bus.CargoCapacity - trip.CargoCapacityBooked;
                     if (requestDto.CargoWeight > availableCargoCapacity)
                     {
@@ -126,10 +132,9 @@ namespace BusBookingSystem.Infrastructure.Services
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                var seatsFare = (int)(trip.SeatFare * requestDto.NumberOfSeats);
-                var cargoFare = trip.CargoFare.HasValue
-                    ? (int)(trip.CargoFare.Value * requestDto.CargoWeight)
-                    : 0;
+                // CargoFare is guaranteed when CargoWeight > 0 (checked above)
+                var seatsFare = trip.SeatFare * booking.NumberOfSeats;
+                var cargoFare = (trip.CargoFare ?? 0m) * booking.CargoWeight;
 
                 return Result<BookingResponseDto>.Ok(new BookingResponseDto
                 {

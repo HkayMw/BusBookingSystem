@@ -93,7 +93,7 @@ namespace BusBookingSystem.Infrastructure.Services
         public async Task<Result<AuthResponseDto>> LoginAsync(UserLoginRequestDto userLoginRequestDto)
         {
             // retrieve user
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userLoginRequestDto.Email);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == userLoginRequestDto.Email.ToLower());
 
             // same message for unknown email and wrong password, so login does not reveal which emails are registered
             if (user is null)

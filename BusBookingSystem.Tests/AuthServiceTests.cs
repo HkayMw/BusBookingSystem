@@ -85,6 +85,23 @@ public class AuthServiceTests
     }
 
     [Fact]
+    public async Task LoginAsync_MatchesEmailIgnoringCase()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        var service = CreateService(context);
+        await service.RegisterAsync(CreateRegisterRequest("chikondi@example.com"));
+
+        // Act
+        var result = await service.LoginAsync(new UserLoginRequestDto { Email = "Chikondi@Example.com", Password = Password });
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.Equal(ResultStatus.Success, result.Status);
+        Assert.False(string.IsNullOrWhiteSpace(result.Data!.Token));
+    }
+
+    [Fact]
     public async Task LoginAsync_ReturnsUnauthorized_ForUnknownEmail()
     {
         // Arrange

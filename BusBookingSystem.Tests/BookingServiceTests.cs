@@ -160,6 +160,44 @@ public class BookingServiceTests
         Assert.Equal(BusCargoCapacity - 10, storedTrip.CargoCapacityBooked);
     }
 
+    [Fact]
+    public async Task CreateBookingAsync_ReturnsConflict_WhenTripHasNoCargoFare()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        var (user, trip) = await SeedTripAsync(context, cargoFare: null);
+        var service = new BookingService(context);
+        var request = new BookingRequestDto { TripId = trip.Id, CargoWeight = 10 };
+
+        // Act
+        var result = await service.CreateBookingAsync(user.Id, request);
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Equal(ResultStatus.Conflict, result.Status);
+        Assert.Empty(context.Bookings);
+
+        var storedTrip = await GetStoredTripAsync(context, trip.Id);
+        Assert.Equal(0, storedTrip.CargoCapacityBooked);
+    }
+
+    [Fact]
+    public async Task CreateBookingAsync_AllowsSeatOnlyBooking_WhenTripHasNoCargoFare()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        var (user, trip) = await SeedTripAsync(context, cargoFare: null);
+        var service = new BookingService(context);
+        var request = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 1 };
+
+        // Act
+        var result = await service.CreateBookingAsync(user.Id, request);
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.Equal(0m, result.Data!.CargoFare);
+    }
+
     #endregion
 
     #region Successful bookings
@@ -184,9 +222,9 @@ public class BookingServiceTests
         var response = result.Data!;
         Assert.Equal(2, response.NumberOfSeats);
         Assert.Equal(0, response.CargoWeight);
-        Assert.Equal(7000, response.SeatsFare);
-        Assert.Equal(0, response.CargoFare);
-        Assert.Equal(7000, response.TotalFare);
+        Assert.Equal(7000m, response.SeatsFare);
+        Assert.Equal(0m, response.CargoFare);
+        Assert.Equal(7000m, response.TotalFare);
 
         var booking = await context.Bookings.AsNoTracking().SingleAsync();
         Assert.Equal(response.BookingId, booking.Id);
@@ -216,9 +254,9 @@ public class BookingServiceTests
         // Assert
         Assert.True(result.Success);
         Assert.NotNull(result.Data);
-        Assert.Equal(0, result.Data!.SeatsFare);
-        Assert.Equal(20000, result.Data.CargoFare);
-        Assert.Equal(20000, result.Data.TotalFare);
+        Assert.Equal(0m, result.Data!.SeatsFare);
+        Assert.Equal(20000m, result.Data.CargoFare);
+        Assert.Equal(20000m, result.Data.TotalFare);
 
         var booking = await context.Bookings.AsNoTracking().SingleAsync();
         Assert.Equal(0, booking.NumberOfSeats);
@@ -227,6 +265,26 @@ public class BookingServiceTests
         var storedTrip = await GetStoredTripAsync(context, trip.Id);
         Assert.Equal(5, storedTrip.SeatsBooked);
         Assert.Equal(65, storedTrip.CargoCapacityBooked);
+    }
+
+    [Fact]
+    public async Task CreateBookingAsync_KeepsFractionalFares()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        var (user, trip) = await SeedTripAsync(context, seatFare: 3500.75m, cargoFare: 12.50m);
+        var service = new BookingService(context);
+        var request = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 2, CargoWeight = 3 };
+
+        // Act
+        var result = await service.CreateBookingAsync(user.Id, request);
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.NotNull(result.Data);
+        Assert.Equal(7001.50m, result.Data!.SeatsFare);
+        Assert.Equal(37.50m, result.Data.CargoFare);
+        Assert.Equal(7039.00m, result.Data.TotalFare);
     }
 
     #endregion
@@ -259,7 +317,9 @@ public class BookingServiceTests
         AppDbContext context,
         int seatsBooked = 0,
         int cargoCapacityBooked = 0,
-        bool hasCargoSpace = true)
+        bool hasCargoSpace = true,
+        decimal seatFare = 3500m,
+        decimal? cargoFare = 800m)
     {
         var originDepot = new Depot
         {
@@ -311,8 +371,8 @@ public class BookingServiceTests
                 Origin = originDepot,
                 Destination = destinationDepot
             },
-            SeatFare = 3500m,
-            CargoFare = hasCargoSpace ? 800m : null,
+            SeatFare = seatFare,
+            CargoFare = hasCargoSpace ? cargoFare : null,
             SeatsBooked = seatsBooked,
             CargoCapacityBooked = cargoCapacityBooked,
             DepartureTime = new DateTimeOffset(2026, 10, 12, 8, 0, 0, TimeSpan.Zero),
