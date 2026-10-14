@@ -21,7 +21,7 @@ Update this file at the end of every session. Detailed steps live in the `day N 
 
 ## Day 9 checklist (from `day 9 walk through.md`, in order)
 
-- [ ] 1. `DevelopmentDataSeeder` in `Infrastructure/Data/` (no seeder exists yet — **this blocks everything else**)
+- [ ] 1. `DevelopmentDataSeeder` in `Infrastructure/Data/` — **ready to commit**: seeds 5 depots (Jenda inactive), 4 buses (incl. a minibus with no cargo space), 6 routes and 5 trips; verified on a clean database 14 Oct. The Day 9 seed-data table and run-through table now match it. Not covered: a no-cargo-fare trip and a fractional fare.
 - [ ] 2. Optional: `GET /api/booking/{bookingId}` with an ownership check (otherwise drop it from all claims)
 - [ ] 3. Full journey in `BusBookingSystem.API.http` (currently only 2 requests)
 - [ ] 4. Clean-database run-through (19-row table, section 9)

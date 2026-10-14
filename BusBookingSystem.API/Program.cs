@@ -119,8 +119,12 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    // Seed development data for manual testing
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await DevelopmentDataSeeder.SeedAsync(context);
 
+    app.MapOpenApi();
     app.MapScalarApiReference();
 
 }
