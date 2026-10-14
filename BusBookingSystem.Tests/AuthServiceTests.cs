@@ -4,6 +4,7 @@ using BusBookingSystem.Application.DTOs;
 using BusBookingSystem.Core.Entities;
 using BusBookingSystem.Core.Enums;
 using BusBookingSystem.Infrastructure.Data;
+using BusBookingSystem.Infrastructure.Mapping;
 using BusBookingSystem.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -85,6 +86,23 @@ public class AuthServiceTests
     }
 
     [Fact]
+    public async Task LoginAsync_MatchesEmailIgnoringCase()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        var service = CreateService(context);
+        await service.RegisterAsync(CreateRegisterRequest("chikondi@example.com"));
+
+        // Act
+        var result = await service.LoginAsync(new UserLoginRequestDto { Email = "Chikondi@Example.com", Password = Password });
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.Equal(ResultStatus.Success, result.Status);
+        Assert.False(string.IsNullOrWhiteSpace(result.Data!.Token));
+    }
+
+    [Fact]
     public async Task LoginAsync_ReturnsUnauthorized_ForUnknownEmail()
     {
         // Arrange
@@ -145,12 +163,7 @@ public class AuthServiceTests
 
     private static AuthService CreateService(AppDbContext context)
     {
-        // Same maps as the API registers in Program.cs.
-        var mapper = new MapperConfiguration(cfg =>
-        {
-            cfg.CreateMap<UserRegisterRequestDto, User>();
-            cfg.CreateMap<User, UserDto>();
-        }, NullLoggerFactory.Instance).CreateMapper();
+        var mapper = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>(), NullLoggerFactory.Instance).CreateMapper();
 
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>

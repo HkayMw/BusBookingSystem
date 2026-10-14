@@ -36,7 +36,7 @@ namespace BusBookingSystem.Infrastructure.Services
             {
                 throw new InvalidOperationException("JwtSettings:Secret is missing or empty.");
             }
-            byte[] key = Encoding.ASCII.GetBytes(jwtSecret);
+            byte[] key = Encoding.UTF8.GetBytes(jwtSecret);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -63,85 +63,65 @@ namespace BusBookingSystem.Infrastructure.Services
 
         public async Task<Result<UserDto>> RegisterAsync(UserRegisterRequestDto userRegisterRequestDto)
         {
-            try
+            if (userRegisterRequestDto is null)
             {
-                if (userRegisterRequestDto is null)
-                {
-                    return Result<UserDto>.BadRequest($"User registration data is required.");
-                }
-                //check email exist
-                var emailExists = await IsEmailExistAsync(userRegisterRequestDto.Email);
-                if (emailExists)
-                {
-                    return Result<UserDto>.Conflict($"The Email '{userRegisterRequestDto.Email}' already belongs to an existing acount.");
-                }
-
-                // map request dto to entity
-                User user = _mapper.Map<User>(userRegisterRequestDto);
-                user.UserType = UserType.Customer;
-                user.PasswordHash = new PasswordHasher<User>().HashPassword(user, userRegisterRequestDto.Password);
-
-                // add entity
-                await _context.Users.AddAsync(user);
-                await _context.SaveChangesAsync();
-
-                // map entity to response dto
-                var responseOk = _mapper.Map<UserDto>(user);
-
-                // return response dto
-                return Result<UserDto>.Created(responseOk, "User registered successfully.");
+                return Result<UserDto>.BadRequest($"User registration data is required.");
             }
-            catch (Exception e)
+            //check email exist
+            var emailExists = await IsEmailExistAsync(userRegisterRequestDto.Email);
+            if (emailExists)
             {
-                return Result<UserDto>.Unexpected("An unexpected error occurred during user registration.", e.Message);
+                return Result<UserDto>.Conflict($"The Email '{userRegisterRequestDto.Email}' already belongs to an existing acount.");
             }
 
+            // map request dto to entity
+            User user = _mapper.Map<User>(userRegisterRequestDto);
+            user.UserType = UserType.Customer;
+            user.PasswordHash = new PasswordHasher<User>().HashPassword(user, userRegisterRequestDto.Password);
+
+            // add entity
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
+
+            // map entity to response dto
+            var responseOk = _mapper.Map<UserDto>(user);
+
+            // return response dto
+            return Result<UserDto>.Created(responseOk, "User registered successfully.");
         }
 
         public async Task<Result<AuthResponseDto>> LoginAsync(UserLoginRequestDto userLoginRequestDto)
         {
-            try
+            // retrieve user
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == userLoginRequestDto.Email.ToLower());
+
+            // same message for unknown email and wrong password, so login does not reveal which emails are registered
+            if (user is null)
             {
-                // retrieve user
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userLoginRequestDto.Email);
-
-                // same message for unknown email and wrong password, so login does not reveal which emails are registered
-                if (user is null)
-                {
-                    return Result<AuthResponseDto>.UnAuthorized("Invalid email or password.");
-                }
-
-                // check password
-                if (new PasswordHasher<User>().VerifyHashedPassword(user, user.PasswordHash, userLoginRequestDto.Password) == PasswordVerificationResult.Failed)
-                {
-                    return Result<AuthResponseDto>.UnAuthorized("Invalid email or password.");
-                }
-
-                // map entity to response dto
-                var UserDto = _mapper.Map<UserDto>(user);
-
-                // generate jwt token
-                var token = GenerateJwtToken(user);
-
-                // return response dto
-
-                var result = new AuthResponseDto
-                {
-                    UserDto = UserDto,
-                    Token = token
-                };
-
-                return Result<AuthResponseDto>.Ok(result, "User login successfull");
-
-
+                return Result<AuthResponseDto>.UnAuthorized("Invalid email or password.");
             }
-            catch (Exception e)
+
+            // check password
+            if (new PasswordHasher<User>().VerifyHashedPassword(user, user.PasswordHash, userLoginRequestDto.Password) == PasswordVerificationResult.Failed)
             {
-                //throw new InvalidOperationException("An unxpected error occured during user log in.", e);
-                return Result<AuthResponseDto>.Unexpected("Error occured during user login", e.Message);
-
-
+                return Result<AuthResponseDto>.UnAuthorized("Invalid email or password.");
             }
+
+            // map entity to response dto
+            var UserDto = _mapper.Map<UserDto>(user);
+
+            // generate jwt token
+            var token = GenerateJwtToken(user);
+
+            // return response dto
+
+            var result = new AuthResponseDto
+            {
+                UserDto = UserDto,
+                Token = token
+            };
+
+            return Result<AuthResponseDto>.Ok(result, "User login successfull");
         }
 
     }

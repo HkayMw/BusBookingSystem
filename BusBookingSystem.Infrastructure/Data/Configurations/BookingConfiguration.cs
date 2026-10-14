@@ -43,7 +43,7 @@ namespace BusBookingSystem.Infrastructure.Data.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Enforce data integrity with check constraints
-            booking.ToTable(b => b.HasCheckConstraint("CK_Booking_NumberOfSeats_greaterThanZero", "[NumberOfSeats] >= 0"));
+            booking.ToTable(b => b.HasCheckConstraint("CK_Booking_NumberOfSeats_NonNegative", "[NumberOfSeats] >= 0"));
             booking.ToTable(b => b.HasCheckConstraint("CK_Booking_CargoWeight_NonNegative", "[CargoWeight] >= 0"));
 
             // Indexes for performance optimization

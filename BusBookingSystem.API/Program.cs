@@ -1,9 +1,8 @@
 using BusBookingSystem.API;
 using BusBookingSystem.API.Models;
-using BusBookingSystem.Application.DTOs;
 using BusBookingSystem.Application.Interfaces.Services;
-using BusBookingSystem.Core.Entities;
 using BusBookingSystem.Infrastructure.Data;
+using BusBookingSystem.Infrastructure.Mapping;
 using BusBookingSystem.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -19,13 +18,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+// The secret is not stored in appsettings.json. Development: dotnet user-secrets. Other environments: JwtSettings__Secret env var.
 var jwtSecret = builder.Configuration["JwtSettings:Secret"];
 if (string.IsNullOrWhiteSpace(jwtSecret))
 {
-    throw new InvalidOperationException("JwtSettings:Secret is missing or empty.");
+    throw new InvalidOperationException(
+        "JwtSettings:Secret is missing. Set it with 'dotnet user-secrets set \"JwtSettings:Secret\" \"<value>\" --project BusBookingSystem.API' " +
+        "or the JwtSettings__Secret environment variable.");
 }
 
 byte[] key = Encoding.UTF8.GetBytes(jwtSecret);
+if (key.Length < 32)
+{
+    throw new InvalidOperationException("JwtSettings:Secret must be at least 32 bytes for HMAC-SHA256.");
+}
 
 builder.Services.AddAuthentication(option =>
 {
@@ -34,7 +40,6 @@ builder.Services.AddAuthentication(option =>
     option.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false;
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -58,12 +63,7 @@ builder.Services.AddScoped<ITripService, TripService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
-//builder.Services.AddAutoMapper(typeof(MappingProfile));
-builder.Services.AddAutoMapper(o =>
-{
-    o.CreateMap<UserRegisterRequestDto, User>();
-    o.CreateMap<User, UserDto>();
-});
+builder.Services.AddAutoMapper(o => o.AddProfile<MappingProfile>());
 
 builder.Services.AddOpenApi(options =>
 {
@@ -113,10 +113,6 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
             });
     };
 });
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 

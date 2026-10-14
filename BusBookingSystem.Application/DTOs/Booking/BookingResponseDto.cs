@@ -9,8 +9,8 @@ namespace BusBookingSystem.Application.DTOs
         public string TripSummary { get; set; } = string.Empty;
         public int NumberOfSeats { get; set; }
         public int CargoWeight { get; set; }
-        public int SeatsFare { get; set; }
-        public int CargoFare { get; set; }
-        public int TotalFare { get; set; }
+        public decimal SeatsFare { get; set; }
+        public decimal CargoFare { get; set; }
+        public decimal TotalFare { get; set; }
     }
 }

@@ -75,7 +75,7 @@ namespace BusBookingSystem.Infrastructure.Migrations
                         {
                             t.HasCheckConstraint("CK_Booking_CargoWeight_NonNegative", "[CargoWeight] >= 0");
 
-                            t.HasCheckConstraint("CK_Booking_NumberOfSeats_greaterThanZero", "[NumberOfSeats] >= 0");
+                            t.HasCheckConstraint("CK_Booking_NumberOfSeats_NonNegative", "[NumberOfSeats] >= 0");
                         });
                 });
 
