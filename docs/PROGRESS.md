@@ -17,14 +17,14 @@ Update this file at the end of every session. Detailed steps live in the `day N 
 | 6 | Auth (JWT) | Done | `/api/auth/register`, `/api/auth/login`, `[Authorize]` on booking |
 | 7 | Errors and polish | Done (no walkthrough file) | `ApiResponse<T>`, `GlobalExceptionHandler`, DataAnnotations, Scalar |
 | 8 | Automated tests | Done | Service, `Api/` and `SqlServer/` suites (39 tests per Day 9 doc) |
-| 9 | Release fact-check | **In progress** (1 of 8) | See checklist below |
+| 9 | Release fact-check | **In progress** (2 of 8) | See checklist below |
 
 ## Day 9 checklist (from `day 9 walk through.md`, in order)
 
-- [ ] 1. `DevelopmentDataSeeder` in `Infrastructure/Data/` — **ready to commit**: seeds 5 depots (Jenda inactive), 4 buses (incl. a minibus with no cargo space), 6 routes and 5 trips; verified on a clean database 14 Oct. The Day 9 seed-data table and run-through table now match it. Not covered: a no-cargo-fare trip and a fractional fare.
+- [x] 1. `DevelopmentDataSeeder` — committed as `710a2a0` (pushed to `origin/DevelopmentDataSeeder`). Seeds 5 depots (Jenda inactive), 4 buses (incl. a no-cargo minibus), 6 routes, 5 trips. A follow-up edit (fractional fare on Blantyre → Lilongwe, no cargo fare on Mzuzu → Lilongwe) is **not committed yet**. Day 9 seed tables and the 21-row run-through match it.
 - [ ] 2. Optional: `GET /api/booking/{bookingId}` with an ownership check (otherwise drop it from all claims)
 - [ ] 3. Full journey in `BusBookingSystem.API.http` (currently only 2 requests)
-- [ ] 4. Clean-database run-through (19-row table, section 9)
+- [ ] 4. Clean-database run-through (21-row table, section 9)
 - [ ] 5. README (currently one line)
 - [ ] 6. CV claims fact-check
 - [x] 7. Git cleanup: squashed, pushed, merged as PR #1 (`c6a1759`)

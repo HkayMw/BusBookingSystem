@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BusBookingSystem.Infrastructure.Data
 {
-    public class DevelopmentDataSeeder
+    public static class DevelopmentDataSeeder
     {
         public static async Task SeedAsync(AppDbContext dbContext)
         {
@@ -14,7 +14,6 @@ namespace BusBookingSystem.Infrastructure.Data
             var tomorrow7am = new DateTimeOffset(today.AddDays(1).AddHours(7), malawiTime);
             var tomorrow9am = new DateTimeOffset(today.AddDays(1).AddHours(9), malawiTime);
             var tomorrow2pm = new DateTimeOffset(today.AddDays(1).AddHours(14), malawiTime);
-            //var dayAfterTomorrow7pm = new DateTimeOffset(today.AddDays(2).AddHours(7), malawiTime);
 
             // 1. Idempotency guard: if any depot exists, assume data has already been seeded
             if (await dbContext.Depots.AnyAsync())
@@ -193,7 +192,7 @@ namespace BusBookingSystem.Infrastructure.Data
             {
                 Bus = blantyreBus,
                 Route = blantyreToLilongwe,
-                SeatFare = 70000m,
+                SeatFare = 70000.50m,
                 CargoFare = 800m,
                 DepartureTime = tomorrow7am
             };
@@ -212,7 +211,7 @@ namespace BusBookingSystem.Infrastructure.Data
                 Bus = mzuzuBus,
                 Route = mzuzuToLilongwe,
                 SeatFare = 80000m,
-                CargoFare = 1000m,
+                CargoFare = null,
                 DepartureTime = tomorrow7am
             };
 

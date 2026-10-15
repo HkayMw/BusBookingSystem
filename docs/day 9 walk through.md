@@ -172,15 +172,15 @@ This is what `DevelopmentDataSeeder` seeds (updated 14 Oct 2026 to match the cod
 
 | Route | Departs | Bus | Seat fare | Cargo fare | Purpose |
 |---|---|---|---|---|---|
-| Blantyre → Lilongwe | 07:00 | `003` | 70,000 | 800 | Return leg |
+| Blantyre → Lilongwe | 07:00 | `003` | **70,000.50** | 800 | Fractional fare (guards against the old `(int)` truncation) |
 | Lilongwe → Blantyre | 14:00 | `003` | 70,000 | 800 | **Main happy path** (seats + cargo) |
-| Mzuzu → Lilongwe | 07:00 | `002` | 80,000 | 1,000 | |
+| Mzuzu → Lilongwe | 07:00 | `002` | 80,000 | **none** | Cargo rejected: the bus has cargo space but the trip has no cargo fare |
 | Lilongwe → Mzuzu | 14:00 | `002` | 80,000 | 1,000 | Route filtering: must not appear in a Lilongwe → Blantyre search |
 | Lilongwe → Dedza | 09:00 | `004` | 30,000 | none | Cargo rejected: the minibus has no cargo space |
 
 No trip sets `ArrivalTime`, so the API returns `null` for it.
 
-**Not covered by this data:** a trip whose bus has cargo space but whose `CargoFare` is `null` ("Cargo bookings are not available for this trip."), and a fractional fare. The Dedza trip has no cargo fare, but the booking service checks the bus's cargo space first, so that request stops at "This bus does not support cargo bookings." Add such a trip if you want to demonstrate either rule.
+The Dedza trip also has no cargo fare, but the booking service checks the bus's cargo space first, so a cargo request there stops at "This bus does not support cargo bookings." The Mzuzu → Lilongwe trip is the one that reaches "Cargo bookings are not available for this trip."
 
 ### Dates and time zones
 
@@ -337,9 +337,11 @@ Copy this table into your notes and fill in the "Actual" column. Every row must 
 | 14 | Book cargo on the Lilongwe → Dedza minibus trip | 409, "This bus does not support cargo bookings." |
 | 15 | Book 1 seat on the Lilongwe → Dedza trip | 201, total 30000.00 |
 | 16 | Book 1001 kg of cargo on the Lilongwe → Blantyre trip | 409, "Not enough cargo capacity available. Requested: 1001, Available: 990." |
-| 17 | Book 0 seats and 0 cargo | 400 |
-| 18 | Restart the API | No duplicate depots or trips |
-| 19 | `dotnet test` | All tests pass |
+| 17 | Book cargo on the Mzuzu → Lilongwe trip | 409, "Cargo bookings are not available for this trip." |
+| 18 | Book 1 seat on the Blantyre → Lilongwe trip | 201, total 70000.50 |
+| 19 | Book 0 seats and 0 cargo | 400 |
+| 20 | Restart the API | No duplicate depots or trips |
+| 21 | `dotnet test` | All tests pass |
 
 If a row fails, fix it before moving on. A failure here is exactly what a reviewer would hit.
 
