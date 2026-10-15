@@ -39,5 +39,26 @@ namespace BusBookingSystem.API.Controllers
 
             return StatusCode(response.StatusCode, response.Body);
         }
+
+        [HttpGet("{bookingId}")]
+        [EndpointSummary("Get a booking by its ID.")]
+        [ProducesResponseType(typeof(ApiResponse<BookingResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<BookingResponseDto>>> GetBookingById(Guid bookingId)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdClaim, out var userId))
+            {
+                var responseEr = Result<BookingResponseDto>.UnAuthorized("No login session active.").ToApiResponse();
+                return StatusCode(responseEr.StatusCode, responseEr.Body);
+            }
+
+            var result = await _bookingService.GetBookingByIdAsync(userId, bookingId);
+            var response = result.ToApiResponse();
+
+            return StatusCode(response.StatusCode, response.Body);
+        }
     }
 }

@@ -21,8 +21,8 @@ Update this file at the end of every session. Detailed steps live in the `day N 
 
 ## Day 9 checklist (from `day 9 walk through.md`, in order)
 
-- [x] 1. `DevelopmentDataSeeder` — committed as `710a2a0` (pushed to `origin/DevelopmentDataSeeder`). Seeds 5 depots (Jenda inactive), 4 buses (incl. a no-cargo minibus), 6 routes, 5 trips. A follow-up edit (fractional fare on Blantyre → Lilongwe, no cargo fare on Mzuzu → Lilongwe) is **not committed yet**. Day 9 seed tables and the 21-row run-through match it.
-- [ ] 2. Optional: `GET /api/booking/{bookingId}` with an ownership check (otherwise drop it from all claims)
+- [x] 1. `DevelopmentDataSeeder` — committed as `710a2a0` (pushed to `origin/DevelopmentDataSeeder`). Seeds 5 depots (Jenda inactive), 4 buses (incl. a no-cargo minibus), 6 routes, 5 trips. Follow-up `4c8f50a` adds the fractional fare and the no-cargo-fare trip (not pushed yet). Day 9 seed tables and the 21-row run-through match it.
+- [ ] 2. Optional: `GET /api/booking/{bookingId}` — **nearly done** on branch `BookingLookup` (uncommitted, checked 15 Oct 21:00). Done: projection lookup, `CustomerName`, fares stored on `Booking` with `HasPrecision` + check constraints + migration `AddBookingFares`, 6 lookup service tests. Decisions: a missing user returns 401 in both booking methods; new bookings are created as `Pending` (no confirmation step exists yet — note it in the README). API tests for GET added 15 Oct: 401 (no token, malformed, foreign key), 404 for a valid token with an unknown booking, and an ownership end-to-end test (owner 200 with stored fares, another customer 404) using data seeded straight into the factory's InMemory database. Left: explain or revert `Trip.SeatFare` losing `required`, run `dotnet test` + `dotnet ef database update`, commit, PR.
 - [ ] 3. Full journey in `BusBookingSystem.API.http` (currently only 2 requests)
 - [ ] 4. Clean-database run-through (21-row table, section 9)
 - [ ] 5. README (currently one line)

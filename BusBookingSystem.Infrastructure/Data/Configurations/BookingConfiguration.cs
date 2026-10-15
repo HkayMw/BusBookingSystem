@@ -12,10 +12,15 @@ namespace BusBookingSystem.Infrastructure.Data.Configurations
         {
             //throw new NotImplementedException();
             booking.HasKey(b => b.Id);
-            booking.Property(b => b.NumberOfSeats)
-                .IsRequired();
-            booking.Property(b => b.CargoWeight)
-                .IsRequired();
+            booking.Property(b => b.NumberOfSeats);
+            booking.Property(b => b.CargoWeight);
+            booking.Property(b => b.SeatsFare)
+                .HasPrecision(18, 2);
+            booking.Property(b => b.CargoFare)
+                .HasPrecision(18, 2);
+            booking.Property(b => b.TotalFare)
+                .HasPrecision(18, 2);
+
             booking.Property(b => b.BookingReference)
                 .IsRequired()
                 .HasMaxLength(30);
@@ -45,6 +50,13 @@ namespace BusBookingSystem.Infrastructure.Data.Configurations
             // Enforce data integrity with check constraints
             booking.ToTable(b => b.HasCheckConstraint("CK_Booking_NumberOfSeats_NonNegative", "[NumberOfSeats] >= 0"));
             booking.ToTable(b => b.HasCheckConstraint("CK_Booking_CargoWeight_NonNegative", "[CargoWeight] >= 0"));
+            booking.ToTable(b => b.HasCheckConstraint("CK_Booking_SeatsFare_NonNegative", "[SeatsFare] >= 0"));
+            booking.ToTable(b => b.HasCheckConstraint("CK_Booking_CargoFare_NonNegative", "[CargoFare] >= 0"));
+            booking.ToTable(b => b.HasCheckConstraint("CK_Booking_TotalFare_NonNegative", "[TotalFare] >= 0"));
+            booking.ToTable(b => b.HasCheckConstraint("CK_Booking_TotalFare_Valid", "[TotalFare] = [SeatsFare] + [CargoFare]"));
+
+            // both NumberOfSeats and CargoWeight cannot be zero at the same time
+            booking.ToTable(b => b.HasCheckConstraint("CK_Booking_SeatsOrCargo_Valid", "[NumberOfSeats] > 0 OR [CargoWeight] > 0"));
 
             // Indexes for performance optimization
             booking.HasIndex(b => b.BookingReference).IsUnique();
