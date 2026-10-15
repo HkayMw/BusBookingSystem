@@ -145,19 +145,42 @@ if (app.Environment.IsDevelopment())
 
 ### What to seed
 
-Choose data that exercises every rule the journey needs to show:
+This is what `DevelopmentDataSeeder` seeds (updated 14 Oct 2026 to match the code). Fares are in Malawi kwacha (MWK). Times are Malawi time (UTC+2), relative to the day the database is seeded.
 
-| Data | Purpose |
-|---|---|
-| Lilongwe Central, Blantyre Central, Mzuzu Depot (active) | Origin and destination choices |
-| Jenda Depot (**inactive**) | Proves `GET /api/depots` filters out inactive depots |
-| `BUS-101` Coach, 40 seats, cargo space 200 | Seat and cargo bookings |
-| `BUS-202` Minibus, 30 seats, **no** cargo space | "This bus does not support cargo bookings." |
-| Routes: Lilongwe → Blantyre, Blantyre → Lilongwe, Lilongwe → Mzuzu | Search by route |
-| Trip: Lilongwe → Blantyre, tomorrow 07:00, `BUS-101`, seat fare 3500.00, cargo fare 800.00 | Main happy path (seats + cargo) |
-| Trip: Lilongwe → Blantyre, tomorrow 14:00, `BUS-202`, seat fare 3000.00, no cargo fare | Second result on the same search; cargo rejected |
-| Trip: Blantyre → Lilongwe, the day after tomorrow, `BUS-101`, seat fare 3500.50, **no cargo fare** | Fractional fare; cargo rejected because the trip has no cargo fare |
-| Trip: Lilongwe → Mzuzu, tomorrow 09:00, `BUS-101`, seat fare 4200.00, cargo fare 950.00 | Route filtering (must not appear in a Lilongwe → Blantyre search) |
+**Depots**
+
+| Code | Name | Active | Purpose |
+|---|---|---|---|
+| `LLW-CEN` | Lilongwe Central | Yes | Origin and destination choices |
+| `BTC-001` | Blantyre City | Yes | |
+| `MZI-MZC` | Mzuzu City | Yes | |
+| `DDZ-TWN` | Dedza Depot | Yes | |
+| `MZI-JND` | Jenda Depot | **No** | Proves `GET /api/depots` filters out inactive depots |
+
+**Buses**
+
+| Fleet | Type | Home depot | Seats | Cargo | Purpose |
+|---|---|---|---|---|---|
+| `001` (`LL 1043`) | Coach | Lilongwe | 41 | 1000 | No trips yet |
+| `002` (`MZ 1057`) | Coach | Mzuzu | 65 | 1000 | Mzuzu trips |
+| `003` (`BT 1098`) | Coach | Blantyre | 56 | 1000 | Blantyre trips: seats and cargo |
+| `004` (`LL 1044`) | Minibus | Lilongwe | 25 | **None** | "This bus does not support cargo bookings." |
+
+**Routes:** Lilongwe → Blantyre, Blantyre → Lilongwe, Lilongwe → Mzuzu, Mzuzu → Lilongwe, Blantyre → Mzuzu, Lilongwe → Dedza. Blantyre → Mzuzu has no trips.
+
+**Trips (all tomorrow)**
+
+| Route | Departs | Bus | Seat fare | Cargo fare | Purpose |
+|---|---|---|---|---|---|
+| Blantyre → Lilongwe | 07:00 | `003` | **70,000.50** | 800 | Fractional fare (guards against the old `(int)` truncation) |
+| Lilongwe → Blantyre | 14:00 | `003` | 70,000 | 800 | **Main happy path** (seats + cargo) |
+| Mzuzu → Lilongwe | 07:00 | `002` | 80,000 | **none** | Cargo rejected: the bus has cargo space but the trip has no cargo fare |
+| Lilongwe → Mzuzu | 14:00 | `002` | 80,000 | 1,000 | Route filtering: must not appear in a Lilongwe → Blantyre search |
+| Lilongwe → Dedza | 09:00 | `004` | 30,000 | none | Cargo rejected: the minibus has no cargo space |
+
+No trip sets `ArrivalTime`, so the API returns `null` for it.
+
+The Dedza trip also has no cargo fare, but the booking service checks the bus's cargo space first, so a cargo request there stops at "This bus does not support cargo bookings." The Mzuzu → Lilongwe trip is the one that reaches "Cargo bookings are not available for this trip."
 
 ### Dates and time zones
 
@@ -165,11 +188,31 @@ Search filters on `DepartureTime.Date`, and SQL Server takes that date in the of
 
 ```csharp
 var malawi = TimeSpan.FromHours(2);
-var tomorrow = DateTime.UtcNow.Date.AddDays(1);
-var departure = new DateTimeOffset(tomorrow.AddHours(7), malawi);
+var today = DateTimeOffset.UtcNow.ToOffset(malawi).Date;   // today in Malawi, Kind = Unspecified
+var departure = new DateTimeOffset(today.AddDays(1).AddHours(7), malawi);
 ```
 
-Check this during the clean-database run (section 9). Searching for tomorrow's date must return both Lilongwe → Blantyre trips.
+> **Corrected 14 Oct 2026.** An earlier version used `DateTime.UtcNow.Date`. That throws `ArgumentException`: its `Kind` is `Utc`, and `new DateTimeOffset(dateTime, offset)` only accepts a `Utc` `DateTime` with a zero offset. It was also the wrong day between 00:00 and 02:00 Malawi time.
+
+Check this during the clean-database run (section 9). Searching Lilongwe → Blantyre for tomorrow's date must return the 14:00 trip.
+
+### Changing the seed data later
+
+The guard (`if any depot exists, return`) means edits to the seeder never reach a database that is already seeded. Seeded trips are also relative to the day you seeded, so after a day or two they are in the past and searches for "tomorrow" come back empty. Ways to reseed, simplest first:
+
+| Option | How | When |
+| --- | --- | --- |
+| Drop and recreate the database | `dotnet ef database drop --force` then `dotnet ef database update`, then run the API | Default for Development. Also removes registered users and bookings. |
+| A `--reseed` switch | `dotnet run --project BusBookingSystem.API -- --reseed`. `Program.cs` checks `args.Contains("--reseed")` and calls a `ResetAsync` that deletes children before parents (`Bookings`, `Trips`, `Routes`, `Buses`, `Depots`) with `ExecuteDeleteAsync`, inside a transaction, then seeds | Keeps users; one-off and explicit, never on by accident |
+| Per-item guards | Check each item by its natural key (`DepotCode`, `RegistrationNumber`) and add only what is missing | Additions only; it cannot apply edits or removals |
+
+Delete order matters because every relationship uses `DeleteBehavior.Restrict`: deleting a depot that a bus still references fails.
+
+### Note: `IsActive = false` and the database default
+
+`DepotConfiguration` has `IsActive.HasDefaultValue(true)`. Before EF Core 8, EF left a `bool` out of the `INSERT` when it held `false` (the CLR default), so the database default `true` won and an inactive depot was saved as active. Since EF Core 8, EF sets a `bool` property's sentinel (its "not set" value) to the database default, here `true`. So an explicit `false` is sent. This project is on EF Core 10, and the clean-database run confirmed Jenda is stored with `IsActive = 0`. No change is needed. See [Announcing EF8 RC2](https://devblogs.microsoft.com/dotnet/announcing-ef8-rc2/) and [dotnet/efcore#34223](https://github.com/dotnet/efcore/issues/34223).
+
+> **Corrected 14 Oct 2026.** An earlier version of this section said Jenda would be saved as active and suggested `.HasSentinel(true)`. That was wrong for EF Core 8 and later.
 
 ### Test it
 
@@ -278,25 +321,27 @@ Copy this table into your notes and fill in the "Actual" column. Every row must 
 
 | # | Request | Expected |
 |---|---|---|
-| 1 | `GET /api/depots` | 200, three depots, no Jenda Depot |
-| 2 | `GET /api/trips/search` Lilongwe → Blantyre, tomorrow | 200, two trips; the Mzuzu trip is absent |
+| 1 | `GET /api/depots` | 200, four depots (Lilongwe, Blantyre, Mzuzu, Dedza), no Jenda Depot |
+| 2 | `GET /api/trips/search` Lilongwe → Blantyre, tomorrow | 200, one trip (14:00); the Mzuzu trip is absent |
 | 3 | Same search, a date with no trips | 200, empty list |
-| 4 | `GET /api/trips/{id}` for the 07:00 trip | 200, 40 seats available, cargo 200 |
+| 4 | `GET /api/trips/{id}` for the Lilongwe → Blantyre 14:00 trip | 200, 56 seats available, cargo 1000 |
 | 5 | `GET /api/trips/{random guid}` | 404 |
 | 6 | Register a customer | 201 |
 | 7 | Register the same email in different capitals | 409 |
 | 8 | Log in with the email in different capitals | 200, token returned |
 | 9 | Log in with a wrong password | 401, "Invalid email or password." |
 | 10 | Book with no token | 401 |
-| 11 | Book 2 seats + 10 cargo on the 07:00 trip | 201, seats 7000.00, cargo 8000.00, total 15000.00 |
-| 12 | `GET /api/trips/{id}` for the same trip | 38 seats available, cargo 190 |
-| 13 | Book 41 seats on the 07:00 trip | 409, not enough seats |
-| 14 | Book cargo on the 14:00 minibus trip | 409, bus does not support cargo |
-| 15 | Book cargo on the Blantyre → Lilongwe trip | 409, cargo not available for this trip |
-| 16 | Book 1 seat on the Blantyre → Lilongwe trip | 201, total 3500.50 |
-| 17 | Book 0 seats and 0 cargo | 400 |
-| 18 | Restart the API | No duplicate depots or trips |
-| 19 | `dotnet test` | All tests pass |
+| 11 | Book 2 seats + 10 cargo on the Lilongwe → Blantyre trip | 201, seats 140000.00, cargo 8000.00, total 148000.00 |
+| 12 | `GET /api/trips/{id}` for the same trip | 54 seats available, cargo 990 |
+| 13 | Book 57 seats on the same trip | 409, "Not enough seats available. Requested: 57, Available: 54." |
+| 14 | Book cargo on the Lilongwe → Dedza minibus trip | 409, "This bus does not support cargo bookings." |
+| 15 | Book 1 seat on the Lilongwe → Dedza trip | 201, total 30000.00 |
+| 16 | Book 1001 kg of cargo on the Lilongwe → Blantyre trip | 409, "Not enough cargo capacity available. Requested: 1001, Available: 990." |
+| 17 | Book cargo on the Mzuzu → Lilongwe trip | 409, "Cargo bookings are not available for this trip." |
+| 18 | Book 1 seat on the Blantyre → Lilongwe trip | 201, total 70000.50 |
+| 19 | Book 0 seats and 0 cargo | 400 |
+| 20 | Restart the API | No duplicate depots or trips |
+| 21 | `dotnet test` | All tests pass |
 
 If a row fails, fix it before moving on. A failure here is exactly what a reviewer would hit.
 
