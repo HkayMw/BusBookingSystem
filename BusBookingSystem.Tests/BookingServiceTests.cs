@@ -43,7 +43,7 @@ public class BookingServiceTests
     #region Missing user or trip
 
     [Fact]
-    public async Task CreateBookingAsync_ReturnsNotFound_WhenUserDoesNotExist()
+    public async Task CreateBookingAsync_ReturnsUnauthorized_WhenUserDoesNotExist()
     {
         // Arrange
         await using var context = CreateContext();
@@ -56,7 +56,7 @@ public class BookingServiceTests
 
         // Assert
         Assert.False(result.Success);
-        Assert.Equal(ResultStatus.NotFound, result.Status);
+        Assert.Equal(ResultStatus.UnAuthorized, result.Status);
         Assert.Empty(context.Bookings);
     }
 
@@ -204,7 +204,7 @@ public class BookingServiceTests
     #region Successful bookings
 
     [Fact]
-    public async Task CreateBookingAsync_CreatesConfirmedSeatBooking_AndReservesSeats()
+    public async Task CreateBookingAsync_CreatesPendingSeatBooking_AndReservesSeats()
     {
         // Arrange
         await using var context = CreateContext();
@@ -231,7 +231,7 @@ public class BookingServiceTests
         Assert.Equal(response.BookingId, booking.Id);
         Assert.Equal(user.Id, booking.UserId);
         Assert.Equal(trip.Id, booking.TripId);
-        Assert.Equal(BookingStatus.Confirmed, booking.BookingStatus);
+        Assert.Equal(BookingStatus.Pending, booking.BookingStatus);
         Assert.Equal(2, booking.NumberOfSeats);
         Assert.Equal(0, booking.CargoWeight);
 
@@ -286,6 +286,114 @@ public class BookingServiceTests
         Assert.Equal(7001.50m, result.Data!.SeatsFare);
         Assert.Equal(37.50m, result.Data.CargoFare);
         Assert.Equal(7039.00m, result.Data.TotalFare);
+    }
+
+    #endregion
+
+    #region Return Booking for owner only
+
+    [Fact]
+    public async Task GetBookingByIdAsync_ReturnsBadRequest_WhenUserIdIsEmpty()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        var (user, trip) = await SeedTripAsync(context);
+        var service = new BookingService(context);
+        var bookingRequest = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 2, CargoWeight = 3 };
+        var createdBooking = await service.CreateBookingAsync(user.Id, bookingRequest);
+        // Act
+        var getBooking = await service.GetBookingByIdAsync(Guid.Empty, createdBooking.Data!.BookingId);
+        // Assert
+        Assert.False(getBooking.Success);
+        Assert.Equal(ResultStatus.BadRequest, getBooking.Status);
+    }
+    [Fact]
+    public async Task GetBookingByIdAsync_ReturnsUnauthorized_WhenUserDoesNotExist()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        var (user, trip) = await SeedTripAsync(context);
+        var service = new BookingService(context);
+        var bookingRequest = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 2, CargoWeight = 3 };
+        var createdBooking = await service.CreateBookingAsync(user.Id, bookingRequest);
+        // Act
+        var getBooking = await service.GetBookingByIdAsync(Guid.NewGuid(), createdBooking.Data!.BookingId);
+        // Assert
+        Assert.True(createdBooking.Success);
+        Assert.False(getBooking.Success);
+        Assert.Equal(ResultStatus.UnAuthorized, getBooking.Status);
+    }
+
+    [Fact]
+    public async Task GetBookingByIdAsync_ReturnsBadRequest_WhenBookingIdIsEmpty()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        var (user, trip) = await SeedTripAsync(context);
+        var service = new BookingService(context);
+        var bookingRequest = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 2, CargoWeight = 3 };
+        var createdBooking = await service.CreateBookingAsync(user.Id, bookingRequest);
+        // Act
+        var getBooking = await service.GetBookingByIdAsync(user.Id, Guid.Empty);
+        // Assert
+        Assert.True(createdBooking.Success);
+        Assert.False(getBooking.Success);
+        Assert.Equal(ResultStatus.BadRequest, getBooking.Status);
+    }
+
+    [Fact]
+    public async Task GetBookingByIdAsync_ReturnsNotFound_ForNonOwner()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        var (user, trip) = await SeedTripAsync(context);
+        var service = new BookingService(context);
+        var bookingRequest = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 2, CargoWeight = 3 };
+        var createdBooking = await service.CreateBookingAsync(user.Id, bookingRequest);
+        var user2 = await context.Users.FirstOrDefaultAsync(u => u.Id != user.Id) ?? throw new InvalidOperationException("No second user found.");
+        // Act
+        var getBooking = await service.GetBookingByIdAsync(user2.Id, createdBooking.Data!.BookingId);
+        // Assert
+        Assert.True(createdBooking.Success);
+        Assert.False(getBooking.Success);
+        Assert.Equal(ResultStatus.NotFound, getBooking.Status);
+    }
+
+    [Fact]
+    public async Task GetBookingByIdAsync_ReturnsNotFound_ForNonExistentBooking()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        var (user, _) = await SeedTripAsync(context);
+        var service = new BookingService(context);
+        // Act
+        var getBooking = await service.GetBookingByIdAsync(user.Id, Guid.NewGuid());
+        // Assert
+        Assert.False(getBooking.Success);
+        Assert.Equal(ResultStatus.NotFound, getBooking.Status);
+    }
+    
+    [Fact]
+    public async Task GetBookingByIdAsync_ReturnsBooking_ForOwner()
+    {
+        // Arrange
+        await using var context = CreateContext();
+        var (user, trip) = await SeedTripAsync(context);
+        var service = new BookingService(context);
+        var bookingRequest = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 2, CargoWeight = 3 };
+        var createdBooking = await service.CreateBookingAsync(user.Id, bookingRequest);
+
+        // Act
+        var getBooking = await service.GetBookingByIdAsync(user.Id, createdBooking.Data!.BookingId);
+        // Assert
+        Assert.True(createdBooking.Success);
+        Assert.True(getBooking.Success);
+        Assert.Equal(ResultStatus.Created, createdBooking.Status);
+        Assert.Equal(createdBooking.Data!.BookingId, getBooking.Data!.BookingId);
+        Assert.Equal("Chikondi Banda", getBooking.Data!.CustomerName);
+        Assert.Equal(7000m, getBooking.Data!.SeatsFare);
+        Assert.Equal(2400m, getBooking.Data!.CargoFare);
+        Assert.Equal(9400m, getBooking.Data!.TotalFare);
     }
 
     #endregion
@@ -390,10 +498,19 @@ public class BookingServiceTests
             UserType = UserType.Customer
         };
 
+        var user2 = new User
+        {
+            FirstName = "Chrispin",
+            LastName = "Phiri",
+            Email = "chrispin@example.com",
+            PasswordHash = "hash",
+            UserType = UserType.Customer
+        };
+
         context.Depots.AddRange(originDepot, destinationDepot);
         context.Buses.Add(bus);
         context.Trips.Add(trip);
-        context.Users.Add(user);
+        context.Users.AddRange(user, user2);
         await context.SaveChangesAsync();
 
         return (user, trip);

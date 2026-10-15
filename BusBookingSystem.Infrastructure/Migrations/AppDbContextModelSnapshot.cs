@@ -36,6 +36,10 @@ namespace BusBookingSystem.Infrastructure.Migrations
                     b.Property<int>("BookingStatus")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("CargoFare")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("CargoWeight")
                         .HasColumnType("int");
 
@@ -52,6 +56,14 @@ namespace BusBookingSystem.Infrastructure.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
+
+                    b.Property<decimal>("SeatsFare")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalFare")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid>("TripId")
                         .HasColumnType("uniqueidentifier");
@@ -73,9 +85,19 @@ namespace BusBookingSystem.Infrastructure.Migrations
 
                     b.ToTable("Bookings", t =>
                         {
+                            t.HasCheckConstraint("CK_Booking_CargoFare_NonNegative", "[CargoFare] >= 0");
+
                             t.HasCheckConstraint("CK_Booking_CargoWeight_NonNegative", "[CargoWeight] >= 0");
 
                             t.HasCheckConstraint("CK_Booking_NumberOfSeats_NonNegative", "[NumberOfSeats] >= 0");
+
+                            t.HasCheckConstraint("CK_Booking_SeatsFare_NonNegative", "[SeatsFare] >= 0");
+
+                            t.HasCheckConstraint("CK_Booking_SeatsOrCargo_Valid", "[NumberOfSeats] > 0 OR [CargoWeight] > 0");
+
+                            t.HasCheckConstraint("CK_Booking_TotalFare_NonNegative", "[TotalFare] >= 0");
+
+                            t.HasCheckConstraint("CK_Booking_TotalFare_Valid", "[TotalFare] = [SeatsFare] + [CargoFare]");
                         });
                 });
 
