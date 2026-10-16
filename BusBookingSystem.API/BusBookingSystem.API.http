@@ -1,11 +1,322 @@
-@BusBookingSystem.API_HostAddress = http://localhost:5267
+@host = https://localhost:7278
 
-GET {{BusBookingSystem.API_HostAddress}}/api/depots
+# =====================================================================
+# Bus Booking System - customer journey
+#
+# How to use:
+#   1. Start from a freshly seeded database (drop, update, run the API
+#      with the https profile so the Authorization header is not lost
+#      in an HTTP -> HTTPS redirect).
+#   2. Send the requests in order, top to bottom. Later requests reuse
+#      values from earlier responses, so the request they come from
+#      must have been sent at least once.
+#   3. Compare each response with its "Expect response" line.
+#
+# Expected numbers assume a fresh seed and one pass through the file.
+# =====================================================================
+
+### =====================================================================
+### PART A - HAPPY PATH
+### =====================================================================
+
+### A1. Get active depots
+# Expect response: 200 OK, four depots ordered by name
+#   [0] Blantyre City, [1] Dedza Depot, [2] Lilongwe Central, [3] Mzuzu City
+#   Jenda Depot (inactive) is not listed
+
+# @name depots
+GET {{host}}/api/depots
 Accept: application/json
 
-###
+### A2. Register a customer
+# Expect response: 201 Created, "User registered successfully."
+# (409 Conflict if this email is already registered - carry on to login)
 
-GET {{BusBookingSystem.API_HostAddress}}/api/trips
+@firstName = Demo
+@lastName = Customer
+@email = demo@example.com
+@password = Passw0rd!
+
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "{{firstName}}",
+  "lastName": "{{lastName}}",
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### A3. Log in
+# Expect response: 200 OK, data.token holds the JWT
+
+# @name login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### A4. Get all trips
+# Expect response: 200 OK, the five seeded trips
+
+# @name allTrips
+GET {{host}}/api/trips
+Accept: application/json
+
+### A5. Search Lilongwe -> Blantyre, tomorrow
+# Expect response: 200 OK, one trip at 14:00 (the Mzuzu trip is not listed)
+
+@tomorrow = {{$localDatetime "yyyy-MM-dd" 1 d}}
+
+# @name lilongweToBlantyreTrip
+GET {{host}}/api/trips/search?originDepotId={{depots.response.body.$.data[2].id}}&destinationDepotId={{depots.response.body.$.data[0].id}}&departureDate={{tomorrow}}
+Accept: application/json
+
+### A6. Trip details before booking
+# Expect response: 200 OK, availableSeats 56, availableCargoCapacity 1000
+
+GET {{host}}/api/trips/{{lilongweToBlantyreTrip.response.body.$.data[0].tripId}}
+Accept: application/json
+
+### A7. Book 2 seats + 10 kg cargo on Lilongwe -> Blantyre
+# Expect response: 201 Created, seatsFare 140000.00, cargoFare 8000.00,
+#   totalFare 148000.00, bookingStatus Pending
+
+# @name booking
+POST {{host}}/api/booking
+Authorization: Bearer {{login.response.body.$.data.token}}
+Content-Type: application/json
+
+{
+  "tripId": "{{lilongweToBlantyreTrip.response.body.$.data[0].tripId}}",
+  "numberOfSeats": 2,
+  "cargoWeight": 10
+}
+
+### A8. Trip details after booking
+# Expect response: 200 OK, availableSeats 54, availableCargoCapacity 990
+
+GET {{host}}/api/trips/{{lilongweToBlantyreTrip.response.body.$.data[0].tripId}}
+Accept: application/json
+
+### A9. Look up my booking
+# Expect response: 200 OK, same bookingId, customerName "Demo Customer",
+#   stored fares 140000.00 + 8000.00 = 148000.00
+
+GET {{host}}/api/booking/{{booking.response.body.$.data.bookingId}}
+Accept: application/json
+Authorization: Bearer {{login.response.body.$.data.token}}
+
+### A10. Search Lilongwe -> Dedza, tomorrow
+# Expect response: 200 OK, one trip at 09:00 on the minibus (no cargo space)
+
+# @name lilongweToDedzaTrip
+GET {{host}}/api/trips/search?originDepotId={{depots.response.body.$.data[2].id}}&destinationDepotId={{depots.response.body.$.data[1].id}}&departureDate={{tomorrow}}
+Accept: application/json
+
+### A11. Book 1 seat on Lilongwe -> Dedza
+# Expect response: 201 Created, totalFare 30000.00
+
+POST {{host}}/api/booking
+Authorization: Bearer {{login.response.body.$.data.token}}
+Content-Type: application/json
+
+{
+  "tripId": "{{lilongweToDedzaTrip.response.body.$.data[0].tripId}}",
+  "numberOfSeats": 1
+}
+
+### A12. Search Blantyre -> Lilongwe, tomorrow
+# Expect response: 200 OK, one trip at 07:00, seatFare 70000.50
+
+# @name blantyreToLilongweTrip
+GET {{host}}/api/trips/search?originDepotId={{depots.response.body.$.data[0].id}}&destinationDepotId={{depots.response.body.$.data[2].id}}&departureDate={{tomorrow}}
+Accept: application/json
+
+### A13. Book 1 seat on Blantyre -> Lilongwe, fractional fare
+# Expect response: 201 Created, totalFare 70000.50 (not truncated to 70000)
+
+POST {{host}}/api/booking
+Authorization: Bearer {{login.response.body.$.data.token}}
+Content-Type: application/json
+
+{
+  "tripId": "{{blantyreToLilongweTrip.response.body.$.data[0].tripId}}",
+  "numberOfSeats": 1
+}
+
+### A14. Search Mzuzu -> Lilongwe, tomorrow
+# Expect response: 200 OK, one trip at 07:00, cargoFare null
+
+# @name mzuzuToLilongweTrip
+GET {{host}}/api/trips/search?originDepotId={{depots.response.body.$.data[3].id}}&destinationDepotId={{depots.response.body.$.data[2].id}}&departureDate={{tomorrow}}
+Accept: application/json
+
+### =====================================================================
+### PART B - EDGE CASES AND FAILURE PATHS
+### Run after Part A: the expected numbers depend on the bookings above.
+### =====================================================================
+
+### B1. Search a date with no trips
+# Expect response: 200 OK, empty list (not an error)
+
+@dateWithNoTrips = {{$localDatetime "yyyy-MM-dd" 30 d}}
+
+GET {{host}}/api/trips/search?originDepotId={{depots.response.body.$.data[2].id}}&destinationDepotId={{depots.response.body.$.data[0].id}}&departureDate={{dateWithNoTrips}}
+Accept: application/json
+
+### B2. Search with the same origin and destination
+# Expect response: 400 Bad Request, "Origin and destination depot IDs cannot be the same."
+
+GET {{host}}/api/trips/search?originDepotId={{depots.response.body.$.data[2].id}}&destinationDepotId={{depots.response.body.$.data[2].id}}&departureDate={{tomorrow}}
+Accept: application/json
+
+### B3. Trip details for an unknown trip
+# Expect response: 404 Not Found, "Trip was not found."
+
+@unknownId = {{$guid}}
+
+GET {{host}}/api/trips/{{unknownId}}
+Accept: application/json
+
+### B4. Register the same email in different capitals
+# Expect response: 409 Conflict (emails are case-insensitive)
+
+@emailDifferentCase = DEMO@Example.COM
+
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "{{firstName}}",
+  "lastName": "{{lastName}}",
+  "email": "{{emailDifferentCase}}",
+  "password": "{{password}}"
+}
+
+### B5. Log in with the email in different capitals
+# Expect response: 200 OK, token returned
+
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{emailDifferentCase}}",
+  "password": "{{password}}"
+}
+
+### B6. Log in with a wrong password
+# Expect response: 401 Unauthorized, "Invalid email or password."
+# (at least 8 characters, so it passes validation and reaches the check)
+
+@wrongPassword = WrongPassw0rd!
+
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{wrongPassword}}"
+}
+
+### B7. Book without a token
+# Expect response: 401 Unauthorized (empty body - rejected by [Authorize])
+
+POST {{host}}/api/booking
+Content-Type: application/json
+
+{
+  "tripId": "{{lilongweToBlantyreTrip.response.body.$.data[0].tripId}}",
+  "numberOfSeats": 1
+}
+
+### B8. Book more seats than are available
+# Expect response: 409 Conflict, "Not enough seats available. Requested: 57, Available: 54."
+
+POST {{host}}/api/booking
+Authorization: Bearer {{login.response.body.$.data.token}}
+Content-Type: application/json
+
+{
+  "tripId": "{{lilongweToBlantyreTrip.response.body.$.data[0].tripId}}",
+  "numberOfSeats": 57
+}
+
+### B9. Book more cargo than is available
+# Expect response: 409 Conflict, "Not enough cargo capacity available. Requested: 1001, Available: 990."
+
+POST {{host}}/api/booking
+Authorization: Bearer {{login.response.body.$.data.token}}
+Content-Type: application/json
+
+{
+  "tripId": "{{lilongweToBlantyreTrip.response.body.$.data[0].tripId}}",
+  "cargoWeight": 1001
+}
+
+### B10. Book cargo on a bus with no cargo space
+# Expect response: 409 Conflict, "This bus does not support cargo bookings."
+
+POST {{host}}/api/booking
+Authorization: Bearer {{login.response.body.$.data.token}}
+Content-Type: application/json
+
+{
+  "tripId": "{{lilongweToDedzaTrip.response.body.$.data[0].tripId}}",
+  "cargoWeight": 5
+}
+
+### B11. Book cargo on a trip with no cargo fare
+# Expect response: 409 Conflict, "Cargo bookings are not available for this trip."
+
+POST {{host}}/api/booking
+Authorization: Bearer {{login.response.body.$.data.token}}
+Content-Type: application/json
+
+{
+  "tripId": "{{mzuzuToLilongweTrip.response.body.$.data[0].tripId}}",
+  "cargoWeight": 5
+}
+
+### B12. Book 0 seats and 0 cargo
+# Expect response: 400 Bad Request, "A booking must include at least one seat or cargo quantity."
+
+POST {{host}}/api/booking
+Authorization: Bearer {{login.response.body.$.data.token}}
+Content-Type: application/json
+
+{
+  "tripId": "{{lilongweToBlantyreTrip.response.body.$.data[0].tripId}}",
+  "numberOfSeats": 0,
+  "cargoWeight": 0
+}
+
+### B13. Book an unknown trip
+# Expect response: 404 Not Found, "Trip was not found."
+
+POST {{host}}/api/booking
+Authorization: Bearer {{login.response.body.$.data.token}}
+Content-Type: application/json
+
+{
+  "tripId": "{{unknownId}}",
+  "numberOfSeats": 1
+}
+
+### B14. Look up an unknown booking
+# Expect response: 404 Not Found, "Booking not found."
+
+GET {{host}}/api/booking/{{unknownId}}
+Accept: application/json
+Authorization: Bearer {{login.response.body.$.data.token}}
+
+### B15. Look up a booking without a token
+# Expect response: 401 Unauthorized (empty body - rejected by [Authorize])
+
+GET {{host}}/api/booking/{{booking.response.body.$.data.bookingId}}
 Accept: application/json
 
 ###

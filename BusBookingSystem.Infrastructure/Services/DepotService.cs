@@ -32,6 +32,7 @@ namespace BusBookingSystem.Infrastructure.Services
 
             var activeDepots = await _context.Depots
                 .Where(d => d.IsActive)
+                .OrderBy(d => d.Name)
                 .Select(d => new DepotListDto
                 {
                     Id = d.Id,

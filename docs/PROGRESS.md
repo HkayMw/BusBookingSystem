@@ -1,11 +1,11 @@
 # Progress Tracker
 
-Last checked: 14 Oct 2026 (against `master` @ `c6a1759`, PR #1 merged).
+Last checked: 16 Oct 2026 (against `master` @ `f76e7f9`, PRs #2 and #3 merged).
 Update this file at the end of every session. Detailed steps live in the `day N walk through.md` files.
 
 ## Where you are
 
-**Days 1–8: done. Day 9: git cleanup done; seed data next.**
+**Days 1–8: done. Day 9: seed data, booking lookup and git cleanup done; the `.http` journey is next.**
 
 | Day | Slice | Status | Evidence |
 |---|---|---|---|
@@ -17,13 +17,13 @@ Update this file at the end of every session. Detailed steps live in the `day N 
 | 6 | Auth (JWT) | Done | `/api/auth/register`, `/api/auth/login`, `[Authorize]` on booking |
 | 7 | Errors and polish | Done (no walkthrough file) | `ApiResponse<T>`, `GlobalExceptionHandler`, DataAnnotations, Scalar |
 | 8 | Automated tests | Done | Service, `Api/` and `SqlServer/` suites (39 tests per Day 9 doc) |
-| 9 | Release fact-check | **In progress** (2 of 8) | See checklist below |
+| 9 | Release fact-check | **In progress** (3 of 8) | See checklist below |
 
 ## Day 9 checklist (from `day 9 walk through.md`, in order)
 
-- [x] 1. `DevelopmentDataSeeder` — committed as `710a2a0` (pushed to `origin/DevelopmentDataSeeder`). Seeds 5 depots (Jenda inactive), 4 buses (incl. a no-cargo minibus), 6 routes, 5 trips. Follow-up `4c8f50a` adds the fractional fare and the no-cargo-fare trip (not pushed yet). Day 9 seed tables and the 21-row run-through match it.
-- [ ] 2. Optional: `GET /api/booking/{bookingId}` — **nearly done** on branch `BookingLookup` (uncommitted, checked 15 Oct 21:00). Done: projection lookup, `CustomerName`, fares stored on `Booking` with `HasPrecision` + check constraints + migration `AddBookingFares`, 6 lookup service tests. Decisions: a missing user returns 401 in both booking methods; new bookings are created as `Pending` (no confirmation step exists yet — note it in the README). API tests for GET added 15 Oct: 401 (no token, malformed, foreign key), 404 for a valid token with an unknown booking, and an ownership end-to-end test (owner 200 with stored fares, another customer 404) using data seeded straight into the factory's InMemory database. Left: explain or revert `Trip.SeatFare` losing `required`, run `dotnet test` + `dotnet ef database update`, commit, PR.
-- [ ] 3. Full journey in `BusBookingSystem.API.http` (currently only 2 requests)
+- [x] 1. `DevelopmentDataSeeder` — merged in PR #2 (`710a2a0`, `4c8f50a`). 5 depots (Jenda inactive), 4 buses (incl. a no-cargo minibus), 6 routes, 5 trips incl. a fractional fare and a no-cargo-fare trip.
+- [x] 2. `GET /api/booking/{bookingId}` — merged in PR #3 (`988aca3`). Owner-only (404 otherwise); fares stored on `Booking` (migration `AddBookingFares`); new bookings start `Pending`; a missing user returns 401. Service tests + API tests (401, unknown booking 404, owner 200 / other customer 404).
+- [ ] 3. Full journey in `BusBookingSystem.API.http` — **written, needs one clean run** (branch `HttpJourney`). Part A happy path (A1–A14) and Part B edge/failure paths (B1–B15), one expected result per request, each tagged with its run-through row. `GetActiveDepotsAsync` now orders by name so depot indexes are stable. Left: reseed, run top to bottom, commit, PR. Spotted for later: typos in API messages ("acount" in the register conflict, "successfull" in the login success).
 - [ ] 4. Clean-database run-through (21-row table, section 9)
 - [ ] 5. README (currently one line)
 - [ ] 6. CV claims fact-check
@@ -32,9 +32,15 @@ Update this file at the end of every session. Detailed steps live in the `day N 
 
 ## Git state
 
-- `master` = `origin/master` = `c6a1759` (PR #1 merged `knowIssuesFix`).
-- Feature branches deleted. Start each Day 9 task on a new branch from `master`.
-- Review every PR with `docs/PR_REVIEW_CHECKLIST.md`.
+- `master` = `origin/master` = `f76e7f9` (PR #2 `DevelopmentDataSeeder` and PR #3 `BookingLookup` merged with merge commits).
+- Feature branches deleted locally and on GitHub. Start each task on a new branch from `master`.
+- Review every PR with `docs/PR_REVIEW_CHECKLIST.md`. For stacked PRs, merge the lower one first and use merge commits, not squash.
+
+## Future work (not Day 9)
+
+- Move the "user still exists" check into `JwtBearerEvents.OnTokenValidated` so every `[Authorize]` endpoint gets it once, then drop the per-method checks.
+- A confirmation step that moves bookings from `Pending` to `Confirmed`.
+- Admin endpoints for depots, buses, routes and trips.
 
 ## Known doc drift (code wins)
 
@@ -44,4 +50,4 @@ Update this file at the end of every session. Detailed steps live in the `day N 
 
 ## Next session starts here
 
-Day 9, Task 1: write `DevelopmentDataSeeder` (section 6 of the Day 9 walkthrough).
+Day 9, Task 3: the full customer journey in `BusBookingSystem.API.http` (section 8 of the Day 9 walkthrough), using the 21-row run-through table as the script. Branch: `HttpJourney`.
