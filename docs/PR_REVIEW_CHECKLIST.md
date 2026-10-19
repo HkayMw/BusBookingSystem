@@ -9,7 +9,7 @@ Work through the checklist in order. The first items matter most; readability co
 ```bash
 gh pr checkout <number>                 # or: git switch <branch>
 git diff --stat master...HEAD           # what changed, and how much
-git log --oneline master..HEAD          # one meaningful commit per slice?
+git log --oneline master..HEAD          # one meaningful commit per slice? messages about code/behaviour, no day or task numbers?
 dotnet build BusBookingSystem.slnx
 dotnet test BusBookingSystem.Tests      # add --filter "Category!=SqlServer" if no SQL Server
 ```

@@ -101,6 +101,12 @@ Match the existing code:
   - `Api/` uses `WebApplicationFactory<Program>` (`BookingApiFactory`) with a test JWT secret and InMemory database, so it needs no user secrets.
   - `SqlServer/` runs against a throwaway database created and migrated by `SqlServerDatabaseFixture`, then dropped. The server comes from the `BUSBOOKING_TEST_SQLSERVER` env var, defaulting to `(local)\SQLEXPRESS`. These tests use `[SkippableFact]` and skip when no server is reachable. Concurrency, transactions and check constraints belong here.
 
+## Commit messages
+
+- Describe the code and behaviour change in the imperative: "Add booking lookup restricted to the booking owner", "Order active depots by name".
+- Never mention days, tasks or sessions from the learning plan in `docs/`. The git history describes the system, so it must read clearly to someone who has never seen the plan.
+- One meaningful commit per slice; the body (optional) lists the notable changes.
+
 ## Known issues / gotchas
 
 - The original JWT secret is in pushed git history (`origin/master`, commits up to `a58e7c2`). It has been rotated out; treat it as public and never reuse it.
