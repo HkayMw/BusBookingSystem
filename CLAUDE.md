@@ -6,7 +6,7 @@ Guidance for working in this repository.
 
 Bus Booking System: a backend REST API MVP (ASP.NET Core, .NET 10, EF Core + SQL Server). Customers browse depots, search trips, view trip details, register/log in (JWT), and book seats and/or cargo space on a trip.
 
-Sprint planning and design decisions live in [docs/](docs/). Read [docs/PROJECT_HANDOFF_DAY_3_ONWARDS.md](docs/PROJECT_HANDOFF_DAY_3_ONWARDS.md) before making architectural changes. The docs can be out of date, so check the code too.
+Sprint planning and design decisions live in [docs/](docs/) (development reference). Project documentation that ships with the system and is linked from the README lives in [docs/docs/](docs/docs/); put new user-facing docs there by default. Read [docs/PROJECT_HANDOFF_DAY_3_ONWARDS.md](docs/PROJECT_HANDOFF_DAY_3_ONWARDS.md) before making architectural changes. The docs can be out of date, so check the code too.
 
 ## Solution layout
 
