@@ -317,6 +317,8 @@ Open `https://localhost:7278/scalar` and confirm the API documentation loads.
 
 ### Run the journey and record the results
 
+> **Updated 19 Oct 2026.** The maintained version of this table is [`docs/docs/CLEAN_DATABASE_RUN_THROUGH.md`](docs/CLEAN_DATABASE_RUN_THROUGH.md). It has 31 rows in the same order as `BusBookingSystem.API.http` (A1–A14, B1–B15, then the restart and `dotnet test` checks) and a blank Actual column to reuse. The 21-row table below is the original plan.
+
 Copy this table into your notes and fill in the "Actual" column. Every row must match before you write the README.
 
 | # | Request | Expected |

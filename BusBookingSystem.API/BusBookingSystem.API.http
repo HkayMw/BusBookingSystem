@@ -20,7 +20,7 @@
 ### =====================================================================
 
 ### A1. Get active depots
-# Expect response: 200 OK, four depots ordered by name
+# Expect response: 200 OK, "Active depots retrieved successfully.", four depots ordered by name
 #   [0] Blantyre City, [1] Dedza Depot, [2] Lilongwe Central, [3] Mzuzu City
 #   Jenda Depot (inactive) is not listed
 
@@ -48,7 +48,7 @@ Content-Type: application/json
 }
 
 ### A3. Log in
-# Expect response: 200 OK, data.token holds the JWT
+# Expect response: 200 OK, "User login successfull", data.token holds the JWT
 
 # @name login
 POST {{host}}/api/auth/login
@@ -60,14 +60,14 @@ Content-Type: application/json
 }
 
 ### A4. Get all trips
-# Expect response: 200 OK, the five seeded trips
+# Expect response: 200 OK, "All trips retrieved successfully.", the five seeded trips
 
 # @name allTrips
 GET {{host}}/api/trips
 Accept: application/json
 
 ### A5. Search Lilongwe -> Blantyre, tomorrow
-# Expect response: 200 OK, one trip at 14:00 (the Mzuzu trip is not listed)
+# Expect response: 200 OK, "Trips searched successfully.", one trip at 14:00 (the Mzuzu trip is not listed)
 
 @tomorrow = {{$localDatetime "yyyy-MM-dd" 1 d}}
 
@@ -76,13 +76,13 @@ GET {{host}}/api/trips/search?originDepotId={{depots.response.body.$.data[2].id}
 Accept: application/json
 
 ### A6. Trip details before booking
-# Expect response: 200 OK, availableSeats 56, availableCargoCapacity 1000
+# Expect response: 200 OK, "Trip retrieved successfully.", availableSeats 56, availableCargoCapacity 1000
 
 GET {{host}}/api/trips/{{lilongweToBlantyreTrip.response.body.$.data[0].tripId}}
 Accept: application/json
 
 ### A7. Book 2 seats + 10 kg cargo on Lilongwe -> Blantyre
-# Expect response: 201 Created, seatsFare 140000.00, cargoFare 8000.00,
+# Expect response: 201 Created, "Booking created successfully.", seatsFare 140000.00, cargoFare 8000.00,
 #   totalFare 148000.00, bookingStatus Pending
 
 # @name booking
@@ -97,13 +97,13 @@ Content-Type: application/json
 }
 
 ### A8. Trip details after booking
-# Expect response: 200 OK, availableSeats 54, availableCargoCapacity 990
+# Expect response: 200 OK, "Trip retrieved successfully.", availableSeats 54, availableCargoCapacity 990
 
 GET {{host}}/api/trips/{{lilongweToBlantyreTrip.response.body.$.data[0].tripId}}
 Accept: application/json
 
 ### A9. Look up my booking
-# Expect response: 200 OK, same bookingId, customerName "Demo Customer",
+# Expect response: 200 OK, "Booking retrieved successfully.", same bookingId, customerName "Demo Customer",
 #   stored fares 140000.00 + 8000.00 = 148000.00
 
 GET {{host}}/api/booking/{{booking.response.body.$.data.bookingId}}
@@ -111,14 +111,14 @@ Accept: application/json
 Authorization: Bearer {{login.response.body.$.data.token}}
 
 ### A10. Search Lilongwe -> Dedza, tomorrow
-# Expect response: 200 OK, one trip at 09:00 on the minibus (no cargo space)
+# Expect response: 200 OK, "Trips searched successfully.", one trip at 09:00 on the minibus (no cargo space)
 
 # @name lilongweToDedzaTrip
 GET {{host}}/api/trips/search?originDepotId={{depots.response.body.$.data[2].id}}&destinationDepotId={{depots.response.body.$.data[1].id}}&departureDate={{tomorrow}}
 Accept: application/json
 
 ### A11. Book 1 seat on Lilongwe -> Dedza
-# Expect response: 201 Created, totalFare 30000.00
+# Expect response: 201 Created, "Booking created successfully.", totalFare 30000.00
 
 POST {{host}}/api/booking
 Authorization: Bearer {{login.response.body.$.data.token}}
@@ -130,14 +130,14 @@ Content-Type: application/json
 }
 
 ### A12. Search Blantyre -> Lilongwe, tomorrow
-# Expect response: 200 OK, one trip at 07:00, seatFare 70000.50
+# Expect response: 200 OK, "Trips searched successfully.", one trip at 07:00, seatFare 70000.50
 
 # @name blantyreToLilongweTrip
 GET {{host}}/api/trips/search?originDepotId={{depots.response.body.$.data[0].id}}&destinationDepotId={{depots.response.body.$.data[2].id}}&departureDate={{tomorrow}}
 Accept: application/json
 
 ### A13. Book 1 seat on Blantyre -> Lilongwe, fractional fare
-# Expect response: 201 Created, totalFare 70000.50 (not truncated to 70000)
+# Expect response: 201 Created, "Booking created successfully.", totalFare 70000.50 (not truncated to 70000)
 
 POST {{host}}/api/booking
 Authorization: Bearer {{login.response.body.$.data.token}}
@@ -149,7 +149,7 @@ Content-Type: application/json
 }
 
 ### A14. Search Mzuzu -> Lilongwe, tomorrow
-# Expect response: 200 OK, one trip at 07:00, cargoFare null
+# Expect response: 200 OK, "Trips searched successfully.", one trip at 07:00, cargoFare null
 
 # @name mzuzuToLilongweTrip
 GET {{host}}/api/trips/search?originDepotId={{depots.response.body.$.data[3].id}}&destinationDepotId={{depots.response.body.$.data[2].id}}&departureDate={{tomorrow}}
@@ -161,7 +161,7 @@ Accept: application/json
 ### =====================================================================
 
 ### B1. Search a date with no trips
-# Expect response: 200 OK, empty list (not an error)
+# Expect response: 200 OK, "Trips searched successfully.", empty list (not an error)
 
 @dateWithNoTrips = {{$localDatetime "yyyy-MM-dd" 30 d}}
 
@@ -183,7 +183,7 @@ GET {{host}}/api/trips/{{unknownId}}
 Accept: application/json
 
 ### B4. Register the same email in different capitals
-# Expect response: 409 Conflict (emails are case-insensitive)
+# Expect response: 409 Conflict (emails are case-insensitive), "The Email 'DEMO@Example.COM' already belongs to an existing acount."
 
 @emailDifferentCase = DEMO@Example.COM
 
@@ -198,7 +198,7 @@ Content-Type: application/json
 }
 
 ### B5. Log in with the email in different capitals
-# Expect response: 200 OK, token returned
+# Expect response: 200 OK, "User login successfull", token returned in data.token (emails are case-insensitive)
 
 POST {{host}}/api/auth/login
 Content-Type: application/json

@@ -36,7 +36,7 @@ namespace BusBookingSystem.Infrastructure.Services
                     AvailableCargoCapacity = t.Bus.CargoCapacity - t.CargoCapacityBooked
                 }).AsNoTracking().ToListAsync();
 
-            return Result<IReadOnlyList<TripListResultDto>>.Ok(trips, "Trips retrieved successfully.");
+            return Result<IReadOnlyList<TripListResultDto>>.Ok(trips, "All trips retrieved successfully.");
         }
 
         public async Task<Result<TripDto>> GetTripByIdAsync(Guid tripId)
