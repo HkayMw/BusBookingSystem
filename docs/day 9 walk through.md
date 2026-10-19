@@ -268,6 +268,8 @@ Add booking lookup restricted to the booking owner
 
 ## 8. Task 3: make the journey repeatable
 
+> **Updated 19 Oct 2026.** The journey file now lives at `BusBookingSystem.API/HttpRequests/CustomerJourney.http`. `HttpRequests/` is the home for `.http` files; the template's project-named file was renamed to say what it holds.
+
 Replace the contents of `BusBookingSystem.API/BusBookingSystem.API.http` with the full journey, using variables for values captured from earlier responses. Visual Studio and the VS Code REST Client both support named requests:
 
 ```http
@@ -317,7 +319,7 @@ Open `https://localhost:7278/scalar` and confirm the API documentation loads.
 
 ### Run the journey and record the results
 
-> **Updated 19 Oct 2026.** The maintained version of this table is [`docs/docs/CLEAN_DATABASE_RUN_THROUGH.md`](docs/CLEAN_DATABASE_RUN_THROUGH.md). It has 31 rows in the same order as `BusBookingSystem.API.http` (A1–A14, B1–B15, then the restart and `dotnet test` checks) and a blank Actual column to reuse. The 21-row table below is the original plan.
+> **Updated 19 Oct 2026.** The maintained version of this table is [`docs/docs/CLEAN_DATABASE_RUN_THROUGH.md`](docs/CLEAN_DATABASE_RUN_THROUGH.md). It has 31 rows in the same order as `HttpRequests/CustomerJourney.http` (A1–A14, B1–B15, then the restart and `dotnet test` checks) and a blank Actual column to reuse. The 21-row table below is the original plan.
 
 Copy this table into your notes and fill in the "Actual" column. Every row must match before you write the README.
 
@@ -369,7 +371,7 @@ space between depots in Malawi) and what it demonstrates.
   3. Adjust DefaultConnection in appsettings.json if not using (local)\SQLEXPRESS
   4. dotnet ef database update --project BusBookingSystem.Infrastructure --startup-project BusBookingSystem.API
   5. dotnet run --project BusBookingSystem.API --launch-profile https
-  6. Open https://localhost:7278/scalar, or run BusBookingSystem.API.http
+  6. Open https://localhost:7278/scalar, or run BusBookingSystem.API/HttpRequests/CustomerJourney.http
 
 ## Seed data
   What is seeded and which rule each item demonstrates (the table from section 6)
@@ -509,7 +511,7 @@ Never cut:
 - [ ] Development seed data is added, idempotent, and runs in Development only.
 - [ ] Booking lookup is built with an ownership check, **or** removed from every claim.
 - [ ] The booking route in the code matches the docs and README (`/api/booking` or `/api/bookings`).
-- [ ] `BusBookingSystem.API.http` runs the full journey, including failure cases.
+- [x] `HttpRequests/CustomerJourney.http` runs the full journey, including failure cases.
 - [ ] The clean-database run-through table is filled in, and every row matches.
 - [ ] `dotnet test` passes.
 - [ ] The README covers the quick start, journey, seed data, endpoints, examples, architecture, decisions, testing and limitations.

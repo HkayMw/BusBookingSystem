@@ -1,11 +1,11 @@
 # Progress Tracker
 
-Last checked: 19 Oct 2026 (branch `HttpJourney` @ `ee6cc16` + uncommitted changes; `master` @ `f76e7f9`).
+Last checked: 19 Oct 2026 (against `origin/master` @ `0b47f8e`, `HttpJourney` merged).
 Update this file at the end of every session. Detailed steps live in the `day N walk through.md` files.
 
 ## Where you are
 
-**Days 1–8: done. Day 9: seed data, booking lookup and git cleanup done; the `.http` journey passed a clean run and needs committing and merging.**
+**Days 1–8: done. Day 9: seed data, booking lookup, `.http` journey, clean-database run-through and git cleanup done; the README is next.**
 
 | Day | Slice | Status | Evidence |
 |---|---|---|---|
@@ -17,14 +17,14 @@ Update this file at the end of every session. Detailed steps live in the `day N 
 | 6 | Auth (JWT) | Done | `/api/auth/register`, `/api/auth/login`, `[Authorize]` on booking |
 | 7 | Errors and polish | Done (no walkthrough file) | `ApiResponse<T>`, `GlobalExceptionHandler`, DataAnnotations, Scalar |
 | 8 | Automated tests | Done | Service, `Api/` and `SqlServer/` suites (39 tests per Day 9 doc) |
-| 9 | Release fact-check | **In progress** (3 of 8) | See checklist below |
+| 9 | Release fact-check | **In progress** (5 of 8) | See checklist below |
 
 ## Day 9 checklist (from `day 9 walk through.md`, in order)
 
 - [x] 1. `DevelopmentDataSeeder` — merged in PR #2 (`710a2a0`, `4c8f50a`). 5 depots (Jenda inactive), 4 buses (incl. a no-cargo minibus), 6 routes, 5 trips incl. a fractional fare and a no-cargo-fare trip.
 - [x] 2. `GET /api/booking/{bookingId}` — merged in PR #3 (`988aca3`). Owner-only (404 otherwise); fares stored on `Booking` (migration `AddBookingFares`); new bookings start `Pending`; a missing user returns 401. Service tests + API tests (401, unknown booking 404, owner 200 / other customer 404).
-- [ ] 3. Full journey in `BusBookingSystem.API.http` — **clean run passed 19 Oct** (branch `HttpJourney`, first commit `ee6cc16`). Part A happy path (A1–A14) and Part B edge/failure paths (B1–B15), one expected result per request. `GetActiveDepotsAsync` orders by name so depot indexes are stable. Run fixes (uncommitted): expected success messages added to every row; `GetAllTripsAsync` message is now "All trips retrieved successfully.". Left: commit, PR, merge. Spotted for later: typos in API messages ("acount" in the register conflict, "successfull" in the login success).
-- [ ] 4. Clean-database run-through — table now in [`docs/docs/CLEAN_DATABASE_RUN_THROUGH.md`](docs/CLEAN_DATABASE_RUN_THROUGH.md), 31 rows in `.http` file order (A1–A14, B1–B15, restart, `dotnet test`); Actual column left blank on purpose as a reusable template. All `.http` rows matched on 19 Oct. Left: R1 restart check and R2 `dotnet test` if not done yet, then tick.
+- [x] 3. Full journey in `BusBookingSystem.API.http` (since moved to `BusBookingSystem.API/HttpRequests/CustomerJourney.http`) — merged from `HttpJourney` (`ee6cc16`, `4220afb`, merge `0b47f8e`). Part A happy path (A1–A14) and Part B edge/failure paths (B1–B15), each with its expected status and message. `GetActiveDepotsAsync` orders by name so depot indexes are stable; `GetAllTripsAsync` message is "All trips retrieved successfully.". Spotted for later: typos in API messages ("acount" in the register conflict, "successfull" in the login success).
+- [x] 4. Clean-database run-through — all 31 rows passed on 19 Oct (A1–A14, B1–B15, restart, `dotnet test`). Table in [`docs/docs/CLEAN_DATABASE_RUN_THROUGH.md`](docs/CLEAN_DATABASE_RUN_THROUGH.md); its Actual column is left blank on purpose as a reusable template.
 - [ ] 5. README (currently one line)
 - [ ] 6. CV claims fact-check
 - [x] 7. Git cleanup: squashed, pushed, merged as PR #1 (`c6a1759`)
@@ -32,9 +32,10 @@ Update this file at the end of every session. Detailed steps live in the `day N 
 
 ## Git state
 
-- `master` = `origin/master` = `f76e7f9` (PR #2 `DevelopmentDataSeeder` and PR #3 `BookingLookup` merged with merge commits).
+- `origin/master` = `0b47f8e` (PR `HttpJourney` merged with a merge commit; PRs #2 `DevelopmentDataSeeder` and #3 `BookingLookup` before it). Local `master` still at `f76e7f9` until you pull.
 - Feature branches deleted locally and on GitHub. Start each task on a new branch from `master`.
 - Review every PR with `docs/PR_REVIEW_CHECKLIST.md`. For stacked PRs, merge the lower one first and use merge commits, not squash.
+- Commit messages describe the code and behaviour change only. No day or task numbers: those belong to the learning plan in `docs/`, not to the project history.
 
 ## Future work (not Day 9)
 
@@ -55,4 +56,4 @@ Update this file at the end of every session. Detailed steps live in the `day N 
 
 ## Next session starts here
 
-Day 9, finish Tasks 3 and 4 on branch `HttpJourney`: commit the `.http`/`TripService` fixes and `docs/docs/CLEAN_DATABASE_RUN_THROUGH.md`, open the PR, review with `docs/PR_REVIEW_CHECKLIST.md`, merge. Then Task 5: the README (link `docs/docs/` from it).
+Day 9, Task 5: the README (section 10 of the Day 9 walkthrough). Start a new branch from the updated `master`. Lead with what the project is and the quick start, describe what the run-through proved, and link `docs/docs/CLEAN_DATABASE_RUN_THROUGH.md` and `BusBookingSystem.API/HttpRequests/CustomerJourney.http`.
