@@ -33,8 +33,10 @@ namespace BusBookingSystem.Infrastructure.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
-                    b.Property<int>("BookingStatus")
-                        .HasColumnType("int");
+                    b.Property<string>("BookingStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal>("CargoFare")
                         .HasPrecision(18, 2)
@@ -98,6 +100,8 @@ namespace BusBookingSystem.Infrastructure.Migrations
                             t.HasCheckConstraint("CK_Booking_TotalFare_NonNegative", "[TotalFare] >= 0");
 
                             t.HasCheckConstraint("CK_Booking_TotalFare_Valid", "[TotalFare] = [SeatsFare] + [CargoFare]");
+
+                            t.HasCheckConstraint("CK_Booking_ValidBookingStatus", "[BookingStatus] IN ('Pending', 'Confirmed', 'Cancelled')");
                         });
                 });
 
@@ -107,11 +111,15 @@ namespace BusBookingSystem.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("BusStatus")
-                        .HasColumnType("int");
+                    b.Property<string>("BusStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("BusType")
-                        .HasColumnType("int");
+                    b.Property<string>("BusType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("CargoCapacity")
                         .HasColumnType("int");

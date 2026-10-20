@@ -11,12 +11,18 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace BusBookingSystem.Tests.Api;
 
 public class BookingAuthorizationApiTests(BookingApiFactory factory) : IClassFixture<BookingApiFactory>
 {
     private const string BookingUrl = "/api/bookings";
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() }
+    };
 
     [Fact]
     public async Task CreateBooking_ReturnsUnauthorized_WithoutToken()
@@ -71,7 +77,7 @@ public class BookingAuthorizationApiTests(BookingApiFactory factory) : IClassFix
 
         // Assert: the trip does not exist, so a 404 from the service proves authentication passed
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        var body = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
+        var body = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(JsonOptions);
         Assert.Equal("Trip was not found.", body?.Message);
     }
 
@@ -126,7 +132,7 @@ public class BookingAuthorizationApiTests(BookingApiFactory factory) : IClassFix
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        var body = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
+        var body = await response.Content.ReadFromJsonAsync<ApiResponse<object>>(JsonOptions);
         Assert.False(body?.Success);
         Assert.Equal("Booking not found.", body?.Message);
     }
@@ -146,10 +152,11 @@ public class BookingAuthorizationApiTests(BookingApiFactory factory) : IClassFix
 
         // Assert: the owner sees the booking with its stored fares
         Assert.Equal(HttpStatusCode.OK, ownerResponse.StatusCode);
-        var ownerBody = await ownerResponse.Content.ReadFromJsonAsync<ApiResponse<BookingResponseDto>>();
+        var ownerBody = await ownerResponse.Content.ReadFromJsonAsync<ApiResponse<BookingResponseDto>>(JsonOptions);
         Assert.NotNull(ownerBody?.Data);
         Assert.Equal(bookingId, ownerBody!.Data!.BookingId);
         Assert.Equal("Chikondi Banda", ownerBody.Data.CustomerName);
+        Assert.Contains("\"bookingStatus\":\"Pending\"", await ownerResponse.Content.ReadAsStringAsync());
         Assert.Equal(7000m, ownerBody.Data.SeatsFare);
         Assert.Equal(2400m, ownerBody.Data.CargoFare);
         Assert.Equal(9400m, ownerBody.Data.TotalFare);
@@ -187,7 +194,7 @@ public class BookingAuthorizationApiTests(BookingApiFactory factory) : IClassFix
         var login = await client.PostAsJsonAsync("/api/auth/login", new UserLoginRequestDto { Email = email, Password = password });
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
 
-        var loginBody = await login.Content.ReadFromJsonAsync<ApiResponse<AuthResponseDto>>();
+        var loginBody = await login.Content.ReadFromJsonAsync<ApiResponse<AuthResponseDto>>(JsonOptions);
         var token = loginBody?.Data?.Token;
         Assert.False(string.IsNullOrWhiteSpace(token));
 

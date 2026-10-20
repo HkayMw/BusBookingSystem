@@ -16,7 +16,7 @@ A .NET 10 solution for booking bus seats and cargo space between depots in Malaw
 browse depots -> search trips -> view trip -> register -> log in -> book seats and/or cargo -> look up booking
 ```
 
-The whole journey, including failure cases, is scripted in [`CustomerJourney.http`](BusBookingSystem.API/HttpRequests/CustomerJourney.http). It has been run end to end on a freshly seeded database using the [clean-database run-through](docs/docs/CLEAN_DATABASE_RUN_THROUGH.md).
+The whole journey, including failure cases, is scripted in [`CustomerJourney.http`](BusBookingSystem.API/HttpRequests/CustomerJourney.http). It has been run end to end on a freshly seeded database using the [clean-database run-through](docs/docs/CustomerJourney.md).
 
 ## Quick start
 
@@ -135,7 +135,7 @@ Content-Type: application/json
     "bookingId": "8c1f0a52-0000-0000-0000-000000000000",
     "customerName": "Demo Customer",
     "bookingReference": "BK-20261019080000-3F9A1C",
-    "bookingStatus": 0,
+    "bookingStatus": "Pending",
     "tripSummary": "Lilongwe Central → Blantyre City on Tue, 20 Oct 2026",
     "numberOfSeats": 2,
     "cargoWeight": 10,
@@ -147,8 +147,6 @@ Content-Type: application/json
   "timestamp": "2026-10-19T08:00:00Z"
 }
 ```
-
-`bookingStatus` is serialized as a number: `0` = Pending, `1` = Confirmed, `2` = Cancelled.
 
 ### Example: not enough seats
 
@@ -220,7 +218,7 @@ The SQL Server tests use the server in the `BUSBOOKING_TEST_SQLSERVER` environme
 dotnet test BusBookingSystem.slnx --filter "Category!=SqlServer"
 ```
 
-For the manual end-to-end check, follow the [clean-database run-through](docs/docs/CLEAN_DATABASE_RUN_THROUGH.md).
+For the manual end-to-end check, follow the [clean-database run-through](docs/docs/CustomerJourney.md).
 
 ## Limitations and future work
 
@@ -237,5 +235,5 @@ Next steps, roughly in order: the Blazor customer front end, a confirmation step
 
 ## Documentation
 
-- [`docs/docs/`](docs/docs/): project documentation, including the [clean-database run-through](docs/docs/CLEAN_DATABASE_RUN_THROUGH.md).
+- [`docs/docs/`](docs/docs/): project documentation, including the [clean-database run-through](docs/docs/CustomerJourney.md).
 - [`docs/`](docs/): development notes, the build plan and progress tracking.

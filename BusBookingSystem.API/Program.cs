@@ -11,12 +11,14 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+
 
 // The secret is not stored in appsettings.json. Development: dotnet user-secrets. Other environments: JwtSettings__Secret env var.
 var jwtSecret = builder.Configuration["JwtSettings:Secret"];
@@ -65,6 +67,15 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddAutoMapper(o => o.AddProfile<MappingProfile>());
 
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
 builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, CancellationToken) =>
@@ -92,7 +103,6 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
-builder.Services.AddControllers();
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.InvalidModelStateResponseFactory = context =>
