@@ -16,7 +16,7 @@ namespace BusBookingSystem.Tests.Api;
 
 public class BookingAuthorizationApiTests(BookingApiFactory factory) : IClassFixture<BookingApiFactory>
 {
-    private const string BookingUrl = "/api/booking";
+    private const string BookingUrl = "/api/bookings";
 
     [Fact]
     public async Task CreateBooking_ReturnsUnauthorized_WithoutToken()
@@ -83,7 +83,7 @@ public class BookingAuthorizationApiTests(BookingApiFactory factory) : IClassFix
         var client = factory.CreateClient();
         var bookingId = Guid.NewGuid();
         // Act
-        var response = await client.GetAsync($"/api/booking/{bookingId}");
+        var response = await client.GetAsync($"{BookingUrl}/{bookingId}");
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -96,7 +96,7 @@ public class BookingAuthorizationApiTests(BookingApiFactory factory) : IClassFix
         var bookingId = Guid.NewGuid();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "not-a-jwt");
         // Act
-        var response = await client.GetAsync($"/api/booking/{bookingId}");
+        var response = await client.GetAsync($"{BookingUrl}/{bookingId}");
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -110,7 +110,7 @@ public class BookingAuthorizationApiTests(BookingApiFactory factory) : IClassFix
         var foreignToken = CreateToken("AnotherSecretThatTheApiDoesNotTrust-0123456789");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", foreignToken);
         // Act
-        var response = await client.GetAsync($"/api/booking/{bookingId}");
+        var response = await client.GetAsync($"{BookingUrl}/{bookingId}");
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -207,7 +207,7 @@ public class BookingAuthorizationApiTests(BookingApiFactory factory) : IClassFix
     /// <summary>
     /// Seeds two customers, a trip and one booking for the first customer straight into the
     /// factory's InMemory database. The booking is seeded rather than created through
-    /// POST /api/booking because InMemory does not generate RowVersion values.
+    /// POST /api/bookings because InMemory does not generate RowVersion values.
     /// </summary>
     private async Task<(Guid OwnerId, Guid OtherCustomerId, Guid BookingId)> SeedBookingAsync()
     {

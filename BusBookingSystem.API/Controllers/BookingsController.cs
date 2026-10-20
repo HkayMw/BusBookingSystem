@@ -13,7 +13,7 @@ namespace BusBookingSystem.API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class BookingController(IBookingService bookingService) : ControllerBase
+    public class BookingsController(IBookingService bookingService) : ControllerBase
     {
         private readonly IBookingService _bookingService = bookingService;
 
