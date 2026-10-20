@@ -49,7 +49,7 @@ namespace BusBookingSystem.Infrastructure.Services
                     TripId = t.Id,
                     Route = $"{t.Route.Origin.Name} - {t.Route.Destination.Name}",
                     BusFleetNumber = t.Bus.FleetNumber,
-                    BusType = t.Bus.BusType.ToString(),
+                    BusType = t.Bus.BusType,
                     OriginDepotName = t.Route.Origin.Name,
                     DestinationDepotName = t.Route.Destination.Name,
                     DepartureTime = t.DepartureTime,

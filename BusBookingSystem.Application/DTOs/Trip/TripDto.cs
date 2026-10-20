@@ -1,4 +1,6 @@
 ﻿
+using BusBookingSystem.Core.Enums;
+
 namespace BusBookingSystem.Application.DTOs
 {
     public class TripDto
@@ -6,7 +8,7 @@ namespace BusBookingSystem.Application.DTOs
         public Guid TripId { get; set; } // from t.Id
         public string Route { get; set; } = default!; // from t.Route.Origin.Name + " - " + t.Route.Destination.Name
         public string BusFleetNumber { get; set; } = default!; // from t.Bus.FleetNumber
-        public string BusType { get; set; } = default!; // from t.Bus.BusType.ToString()
+        public BusType BusType { get; set; } // from t.Bus.BusType
         public string OriginDepotName { get; set; } = default!; // from t.Route.Origin.Name
         public string DestinationDepotName { get; set; } = default!; // from t.Route.Destination.Name
         public DateTimeOffset DepartureTime { get; set; } // from t.DepartureTime

@@ -135,7 +135,7 @@ Content-Type: application/json
     "bookingId": "8c1f0a52-0000-0000-0000-000000000000",
     "customerName": "Demo Customer",
     "bookingReference": "BK-20261019080000-3F9A1C",
-    "bookingStatus": 0,
+    "bookingStatus": "Pending",
     "tripSummary": "Lilongwe Central → Blantyre City on Tue, 20 Oct 2026",
     "numberOfSeats": 2,
     "cargoWeight": 10,
@@ -147,8 +147,6 @@ Content-Type: application/json
   "timestamp": "2026-10-19T08:00:00Z"
 }
 ```
-
-`bookingStatus` is serialized as a number: `0` = Pending, `1` = Confirmed, `2` = Cancelled.
 
 ### Example: not enough seats
 
