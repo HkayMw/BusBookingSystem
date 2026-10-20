@@ -4,11 +4,11 @@ A .NET 10 solution for booking bus seats and cargo space between depots in Malaw
 
 ## Status
 
-| Part | Status |
-|---|---|
-| REST API (`BusBookingSystem.API`) | Working: depots, trip search and details, register and log in, create and look up bookings |
-| Automated tests (`BusBookingSystem.Tests`) | Service, API and SQL Server suites |
-| Blazor web app (`BusBookingSystem.Web`) | Template only, not connected to the API yet |
+| Part                                       | Status                                                                                     |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| REST API (`BusBookingSystem.API`)          | Working: depots, trip search and details, register and log in, create and look up bookings |
+| Automated tests (`BusBookingSystem.Tests`) | Service, API and SQL Server suites                                                         |
+| Blazor web app (`BusBookingSystem.Web`)    | Template only, not connected to the API yet                                                |
 
 ## Customer journey
 
@@ -16,7 +16,7 @@ A .NET 10 solution for booking bus seats and cargo space between depots in Malaw
 browse depots -> search trips -> view trip -> register -> log in -> book seats and/or cargo -> look up booking
 ```
 
-The whole journey, including failure cases, is scripted in [`CustomerJourney.http`](BusBookingSystem.API/HttpRequests/CustomerJourney.http). It has been run end to end on a freshly seeded database using the [clean-database run-through](docs/docs/CLEAN_DATABASE_RUN_THROUGH.md).
+The whole journey, including failure cases, is scripted in [`CustomerJourney.http`](BusBookingSystem.API/HttpRequests/CustomerJourney.http). It has been run end to end on a freshly seeded database using the [clean-database run-through](docs/docs/CustomerJourney.md).
 
 ## Quick start
 
@@ -67,30 +67,30 @@ dotnet ef database update      --project BusBookingSystem.Infrastructure --start
 
 Fares are in Malawi kwacha (MWK).
 
-| Data | What is seeded | Rule it demonstrates |
-|---|---|---|
-| Depots | Lilongwe Central, Blantyre City, Mzuzu City, Dedza Depot, and Jenda Depot (inactive) | Inactive depots are hidden from `GET /api/depots` |
-| Buses | Three coaches with cargo space, one 25-seat minibus without | Cargo is rejected on a bus with no cargo space |
-| Trip | Lilongwe → Blantyre, 14:00, 56 seats, 1000 kg cargo | Main happy path: seats and cargo |
-| Trip | Blantyre → Lilongwe, 07:00, seat fare 70,000.50 | Fractional fares are kept exactly (`decimal(18,2)`) |
-| Trip | Lilongwe → Mzuzu, 14:00 | Search filters by route |
-| Trip | Mzuzu → Lilongwe, 07:00, no cargo fare | Cargo is rejected on a trip without a cargo fare |
-| Trip | Lilongwe → Dedza, 09:00, on the minibus | Cargo is rejected on a bus with no cargo space |
+| Data   | What is seeded                                                                       | Rule it demonstrates                                |
+| ------ | ------------------------------------------------------------------------------------ | --------------------------------------------------- |
+| Depots | Lilongwe Central, Blantyre City, Mzuzu City, Dedza Depot, and Jenda Depot (inactive) | Inactive depots are hidden from `GET /api/depots`   |
+| Buses  | Three coaches with cargo space, one 25-seat minibus without                          | Cargo is rejected on a bus with no cargo space      |
+| Trip   | Lilongwe → Blantyre, 14:00, 56 seats, 1000 kg cargo                                  | Main happy path: seats and cargo                    |
+| Trip   | Blantyre → Lilongwe, 07:00, seat fare 70,000.50                                      | Fractional fares are kept exactly (`decimal(18,2)`) |
+| Trip   | Lilongwe → Mzuzu, 14:00                                                              | Search filters by route                             |
+| Trip   | Mzuzu → Lilongwe, 07:00, no cargo fare                                               | Cargo is rejected on a trip without a cargo fare    |
+| Trip   | Lilongwe → Dedza, 09:00, on the minibus                                              | Cargo is rejected on a bus with no cargo space      |
 
 ## Endpoints
 
 All responses use the envelope described in [Responses](#responses).
 
-| Method | Route | Auth | Purpose | Responses |
-|---|---|---|---|---|
-| `GET` | `/api/depots` | – | Active depots, ordered by name | 200 |
-| `GET` | `/api/trips` | – | All trips | 200 |
-| `GET` | `/api/trips/search?originDepotId=&destinationDepotId=&departureDate=` | – | Trips on a route for one date | 200, 400 |
-| `GET` | `/api/trips/{tripId}` | – | Trip details with available seats and cargo | 200, 404 |
-| `POST` | `/api/auth/register` | – | Register a customer | 201, 400, 409 |
-| `POST` | `/api/auth/login` | – | Log in and receive a JWT | 200, 400, 401 |
-| `POST` | `/api/booking` | Bearer | Book seats, cargo or both | 201, 400, 401, 404, 409 |
-| `GET` | `/api/booking/{bookingId}` | Bearer | Look up one of your own bookings | 200, 400, 401, 404 |
+| Method | Route                                                                 | Auth   | Purpose                                     | Responses               |
+| ------ | --------------------------------------------------------------------- | ------ | ------------------------------------------- | ----------------------- |
+| `GET`  | `/api/depots`                                                         | –      | Active depots, ordered by name              | 200                     |
+| `GET`  | `/api/trips`                                                          | –      | All trips                                   | 200                     |
+| `GET`  | `/api/trips/search?originDepotId=&destinationDepotId=&departureDate=` | –      | Trips on a route for one date               | 200, 400                |
+| `GET`  | `/api/trips/{tripId}`                                                 | –      | Trip details with available seats and cargo | 200, 404                |
+| `POST` | `/api/auth/register`                                                  | –      | Register a customer                         | 201, 400, 409           |
+| `POST` | `/api/auth/login`                                                     | –      | Log in and receive a JWT                    | 200, 400, 401           |
+| `POST` | `/api/booking`                                                        | Bearer | Book seats, cargo or both                   | 201, 400, 401, 404, 409 |
+| `GET`  | `/api/booking/{bookingId}`                                            | Bearer | Look up one of your own bookings            | 200, 400, 401, 404      |
 
 Notes:
 
@@ -109,7 +109,7 @@ Every response, success or failure, has the same shape:
   "success": true,
   "statusCode": 201,
   "message": "Booking created successfully.",
-  "data": { },
+  "data": {},
   "errors": null,
   "timestamp": "2026-10-19T08:00:00Z"
 }
@@ -140,9 +140,9 @@ Content-Type: application/json
     "tripSummary": "Lilongwe Central → Blantyre City on Tue, 20 Oct 2026",
     "numberOfSeats": 2,
     "cargoWeight": 10,
-    "seatsFare": 140000.00,
-    "cargoFare": 8000.00,
-    "totalFare": 148000.00
+    "seatsFare": 140000.0,
+    "cargoFare": 8000.0,
+    "totalFare": 148000.0
   },
   "errors": null,
   "timestamp": "2026-10-19T08:00:00Z"
@@ -174,14 +174,14 @@ Validation failures return `400` with `"message": "The request is invalid."` and
 Core  <-  Application  <-  Infrastructure  <-  API
 ```
 
-| Project | Role |
-|---|---|
-| `BusBookingSystem.Core` | Domain entities and enums. No dependencies. |
-| `BusBookingSystem.Application` | DTOs, service interfaces and `Result<T>`. References Core only. |
-| `BusBookingSystem.Infrastructure` | `AppDbContext`, EF Core configurations and migrations, service implementations, seed data. |
-| `BusBookingSystem.API` | Controllers, JWT authentication, OpenAPI and Scalar, global exception handler. |
-| `BusBookingSystem.Tests` | xUnit service, API and SQL Server tests. |
-| `BusBookingSystem.Web` | Blazor Web App (interactive server rendering). Template pages only; planned customer front end. |
+| Project                           | Role                                                                                            |
+| --------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `BusBookingSystem.Core`           | Domain entities and enums. No dependencies.                                                     |
+| `BusBookingSystem.Application`    | DTOs, service interfaces and `Result<T>`. References Core only.                                 |
+| `BusBookingSystem.Infrastructure` | `AppDbContext`, EF Core configurations and migrations, service implementations, seed data.      |
+| `BusBookingSystem.API`            | Controllers, JWT authentication, OpenAPI and Scalar, global exception handler.                  |
+| `BusBookingSystem.Tests`          | xUnit service, API and SQL Server tests.                                                        |
+| `BusBookingSystem.Web`            | Blazor Web App (interactive server rendering). Template pages only; planned customer front end. |
 
 Request flow:
 
@@ -209,11 +209,11 @@ Controller -> I*Service (Application) -> *Service (Infrastructure) -> AppDbConte
 dotnet test BusBookingSystem.slnx
 ```
 
-| Suite | Folder | What it covers |
-|---|---|---|
-| Service tests | `BusBookingSystem.Tests/` | Business rules in each service, using the EF Core InMemory provider |
-| API tests | `BusBookingSystem.Tests/Api/` | Authentication and ownership through the real HTTP pipeline (`WebApplicationFactory`), with a test JWT secret and an InMemory database |
-| SQL Server tests | `BusBookingSystem.Tests/SqlServer/` | The last-seat race and a database check constraint, against a throwaway database that is created, migrated and dropped |
+| Suite            | Folder                              | What it covers                                                                                                                         |
+| ---------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Service tests    | `BusBookingSystem.Tests/`           | Business rules in each service, using the EF Core InMemory provider                                                                    |
+| API tests        | `BusBookingSystem.Tests/Api/`       | Authentication and ownership through the real HTTP pipeline (`WebApplicationFactory`), with a test JWT secret and an InMemory database |
+| SQL Server tests | `BusBookingSystem.Tests/SqlServer/` | The last-seat race and a database check constraint, against a throwaway database that is created, migrated and dropped                 |
 
 The SQL Server tests use the server in the `BUSBOOKING_TEST_SQLSERVER` environment variable, or `(local)\SQLEXPRESS` by default, and are skipped when no server is reachable. To skip them explicitly:
 
@@ -221,7 +221,7 @@ The SQL Server tests use the server in the `BUSBOOKING_TEST_SQLSERVER` environme
 dotnet test BusBookingSystem.slnx --filter "Category!=SqlServer"
 ```
 
-For the manual end-to-end check, follow the [clean-database run-through](docs/docs/CLEAN_DATABASE_RUN_THROUGH.md).
+For the manual end-to-end check, follow the [clean-database run-through](docs/docs/CustomerJourney.md).
 
 ## Limitations and future work
 
@@ -238,5 +238,5 @@ Next steps, roughly in order: the Blazor customer front end, a confirmation step
 
 ## Documentation
 
-- [`docs/docs/`](docs/docs/): project documentation, including the [clean-database run-through](docs/docs/CLEAN_DATABASE_RUN_THROUGH.md).
+- [`docs/docs/`](docs/docs/): project documentation, including the [clean-database run-through](docs/docs/CustomerJourney.md).
 - [`docs/`](docs/): development notes, the build plan and progress tracking.
