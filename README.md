@@ -89,15 +89,14 @@ All responses use the envelope described in [Responses](#responses).
 | `GET`  | `/api/trips/{tripId}`                                                 | –      | Trip details with available seats and cargo | 200, 404                |
 | `POST` | `/api/auth/register`                                                  | –      | Register a customer                         | 201, 400, 409           |
 | `POST` | `/api/auth/login`                                                     | –      | Log in and receive a JWT                    | 200, 400, 401           |
-| `POST` | `/api/booking`                                                        | Bearer | Book seats, cargo or both                   | 201, 400, 401, 404, 409 |
-| `GET`  | `/api/booking/{bookingId}`                                            | Bearer | Look up one of your own bookings            | 200, 400, 401, 404      |
+| `POST` | `/api/bookings`                                                       | Bearer | Book seats, cargo or both                   | 201, 400, 401, 404, 409 |
+| `GET`  | `/api/bookings/{bookingId}`                                           | Bearer | Look up one of your own bookings            | 200, 400, 401, 404      |
 
 Notes:
 
 - Emails are case-insensitive for both registration and login.
 - A failed login returns the same message for an unknown email and a wrong password.
 - Looking up another customer's booking returns **404**, not 403, so a stranger cannot tell that the booking ID exists.
-- The booking route is singular (`/api/booking`).
 - Unexpected errors return a generic 500 without internal details.
 
 ## Responses
@@ -118,7 +117,7 @@ Every response, success or failure, has the same shape:
 ### Example: create a booking
 
 ```http
-POST /api/booking
+POST /api/bookings
 Authorization: Bearer <token>
 Content-Type: application/json
 

@@ -86,7 +86,7 @@ Accept: application/json
 #   totalFare 148000.00, bookingStatus Pending
 
 # @name booking
-POST {{host}}/api/booking
+POST {{host}}/api/bookings
 Authorization: Bearer {{login.response.body.$.data.token}}
 Content-Type: application/json
 
@@ -106,7 +106,7 @@ Accept: application/json
 # Expect response: 200 OK, "Booking retrieved successfully.", same bookingId, customerName "Demo Customer",
 #   stored fares 140000.00 + 8000.00 = 148000.00
 
-GET {{host}}/api/booking/{{booking.response.body.$.data.bookingId}}
+GET {{host}}/api/bookings/{{booking.response.body.$.data.bookingId}}
 Accept: application/json
 Authorization: Bearer {{login.response.body.$.data.token}}
 
@@ -120,7 +120,7 @@ Accept: application/json
 ### A11. Book 1 seat on Lilongwe -> Dedza
 # Expect response: 201 Created, "Booking created successfully.", totalFare 30000.00
 
-POST {{host}}/api/booking
+POST {{host}}/api/bookings
 Authorization: Bearer {{login.response.body.$.data.token}}
 Content-Type: application/json
 
@@ -139,7 +139,7 @@ Accept: application/json
 ### A13. Book 1 seat on Blantyre -> Lilongwe, fractional fare
 # Expect response: 201 Created, "Booking created successfully.", totalFare 70000.50 (not truncated to 70000)
 
-POST {{host}}/api/booking
+POST {{host}}/api/bookings
 Authorization: Bearer {{login.response.body.$.data.token}}
 Content-Type: application/json
 
@@ -225,7 +225,7 @@ Content-Type: application/json
 ### B7. Book without a token
 # Expect response: 401 Unauthorized (empty body - rejected by [Authorize])
 
-POST {{host}}/api/booking
+POST {{host}}/api/bookings
 Content-Type: application/json
 
 {
@@ -236,7 +236,7 @@ Content-Type: application/json
 ### B8. Book more seats than are available
 # Expect response: 409 Conflict, "Not enough seats available. Requested: 57, Available: 54."
 
-POST {{host}}/api/booking
+POST {{host}}/api/bookings
 Authorization: Bearer {{login.response.body.$.data.token}}
 Content-Type: application/json
 
@@ -248,7 +248,7 @@ Content-Type: application/json
 ### B9. Book more cargo than is available
 # Expect response: 409 Conflict, "Not enough cargo capacity available. Requested: 1001, Available: 990."
 
-POST {{host}}/api/booking
+POST {{host}}/api/bookings
 Authorization: Bearer {{login.response.body.$.data.token}}
 Content-Type: application/json
 
@@ -260,7 +260,7 @@ Content-Type: application/json
 ### B10. Book cargo on a bus with no cargo space
 # Expect response: 409 Conflict, "This bus does not support cargo bookings."
 
-POST {{host}}/api/booking
+POST {{host}}/api/bookings
 Authorization: Bearer {{login.response.body.$.data.token}}
 Content-Type: application/json
 
@@ -272,7 +272,7 @@ Content-Type: application/json
 ### B11. Book cargo on a trip with no cargo fare
 # Expect response: 409 Conflict, "Cargo bookings are not available for this trip."
 
-POST {{host}}/api/booking
+POST {{host}}/api/bookings
 Authorization: Bearer {{login.response.body.$.data.token}}
 Content-Type: application/json
 
@@ -284,7 +284,7 @@ Content-Type: application/json
 ### B12. Book 0 seats and 0 cargo
 # Expect response: 400 Bad Request, "A booking must include at least one seat or cargo quantity."
 
-POST {{host}}/api/booking
+POST {{host}}/api/bookings
 Authorization: Bearer {{login.response.body.$.data.token}}
 Content-Type: application/json
 
@@ -297,7 +297,7 @@ Content-Type: application/json
 ### B13. Book an unknown trip
 # Expect response: 404 Not Found, "Trip was not found."
 
-POST {{host}}/api/booking
+POST {{host}}/api/bookings
 Authorization: Bearer {{login.response.body.$.data.token}}
 Content-Type: application/json
 
@@ -309,14 +309,14 @@ Content-Type: application/json
 ### B14. Look up an unknown booking
 # Expect response: 404 Not Found, "Booking not found."
 
-GET {{host}}/api/booking/{{unknownId}}
+GET {{host}}/api/bookings/{{unknownId}}
 Accept: application/json
 Authorization: Bearer {{login.response.body.$.data.token}}
 
 ### B15. Look up a booking without a token
 # Expect response: 401 Unauthorized (empty body - rejected by [Authorize])
 
-GET {{host}}/api/booking/{{booking.response.body.$.data.bookingId}}
+GET {{host}}/api/bookings/{{booking.response.body.$.data.bookingId}}
 Accept: application/json
 
 ###
