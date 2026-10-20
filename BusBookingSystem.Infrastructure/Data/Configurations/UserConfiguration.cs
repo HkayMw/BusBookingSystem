@@ -28,7 +28,6 @@ namespace BusBookingSystem.Infrastructure.Data.Configurations
                 .HasMaxLength(15)
                 .IsRequired(false); //TODO: can phone constraints/validation be better?
 
-            //TODO: Make all enums in other entities convert to strings like below
             user.Property(u => u.UserType)
                 .HasConversion<string>()
                 .HasMaxLength(50)

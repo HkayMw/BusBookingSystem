@@ -25,6 +25,8 @@ namespace BusBookingSystem.Infrastructure.Data.Configurations
                 .IsRequired()
                 .HasMaxLength(30);
             booking.Property(b => b.BookingStatus)
+                .HasConversion<string>()
+                .HasMaxLength(50)
                 .IsRequired();
             booking.Property(b => b.RowVersion)
                 .IsRowVersion();
@@ -54,6 +56,7 @@ namespace BusBookingSystem.Infrastructure.Data.Configurations
             booking.ToTable(b => b.HasCheckConstraint("CK_Booking_CargoFare_NonNegative", "[CargoFare] >= 0"));
             booking.ToTable(b => b.HasCheckConstraint("CK_Booking_TotalFare_NonNegative", "[TotalFare] >= 0"));
             booking.ToTable(b => b.HasCheckConstraint("CK_Booking_TotalFare_Valid", "[TotalFare] = [SeatsFare] + [CargoFare]"));
+            booking.ToTable(b => b.HasCheckConstraint("CK_Booking_ValidBookingStatus", "[BookingStatus] IN ('Pending', 'Confirmed', 'Cancelled')"));
 
             // both NumberOfSeats and CargoWeight cannot be zero at the same time
             booking.ToTable(b => b.HasCheckConstraint("CK_Booking_SeatsOrCargo_Valid", "[NumberOfSeats] > 0 OR [CargoWeight] > 0"));
