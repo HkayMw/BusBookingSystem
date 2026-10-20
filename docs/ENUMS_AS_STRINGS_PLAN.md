@@ -1,6 +1,14 @@
 # Plan: Store and Return Enums as Strings
 
-Status: planned, not started (19 Oct 2026). Branch suggestion: `EnumsAsStrings`.
+Status: **done** on branch `EnumsAsStrings` (20 Oct 2026): `0ff7a03` (database) and `937c398` (API). PR pending.
+
+What was built, compared with this plan:
+
+- Per-property `HasConversion<string>().HasMaxLength(50)` in the entity configurations (not `ConfigureConventions`), matching `UserType`.
+- Migration `StoreEnumsAsStrings` with the `UPDATE ... CASE` conversion in `Up` and the reverse in `Down`. Checked on an existing database: rows read as names.
+- The optional `BookingStatus` check constraint (`CK_Booking_ValidBookingStatus`) is in a second migration, `StoreEnumsAsStringsFixExisting`. The name is kept as it is; it only adds the constraint.
+- Step 5 done: `TripDto.BusType` is the `BusType` enum.
+- Tests: the API tests read responses with a shared `JsonSerializerOptions` (`JsonSerializerDefaults.Web` + `JsonStringEnumConverter`), because a client without the converter cannot read string enums. The owner lookup test asserts the raw `"bookingStatus":"Pending"`. 50 tests pass.
 
 ## Goal
 
@@ -121,7 +129,7 @@ Docs: [Enums as strings](https://learn.microsoft.com/en-us/dotnet/standard/seria
 ## Part 4: verify and update docs
 
 1. Migrate an existing database (do not drop it first) and check the rows were converted: `SELECT BookingStatus FROM Bookings; SELECT BusType, BusStatus FROM Buses;`
-2. Reset to a clean database and run the [clean-database run-through](docs/CLEAN_DATABASE_RUN_THROUGH.md). Rows 7 and 9 should now show `bookingStatus "Pending"`.
+2. Reset to a clean database and run the [clean-database run-through](docs/CustomerJourney.md). Rows 7 and 9 should now show `bookingStatus "Pending"`.
 3. Update the README: change `"bookingStatus": 0` to `"Pending"` in the example and remove the sentence explaining the numbers.
 4. Update `CustomerJourney.http` if any expectation mentions numbers.
 5. Run `dotnet test BusBookingSystem.slnx`.
