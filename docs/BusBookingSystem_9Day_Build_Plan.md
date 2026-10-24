@@ -1,6 +1,6 @@
 # Bus Booking System — 9-Day MVP Build Plan
-Target: backend REST API only (no Blazor UI), true to what the MRA CV claims.
-Window: today → 19 Sept (submit MRA application 20 Sept). ~8hrs/day.
+Target: backend REST API only (no Blazor UI), limited to what can be demonstrated.
+Window: 9 days, ending 19 Sept. ~8hrs/day.
 
 Architecture reminder (yours):
 Core ← Application ← Infrastructure ← API   (Web/Blazor is out of scope for this sprint)
@@ -120,8 +120,7 @@ User story: As a reviewer, I want to run the project and understand the implemen
 - Write the README around user journeys, architecture, setup, seed data, and endpoint examples.
 - Walk through every journey in Swagger from a clean database.
 - Push a real commit history with one meaningful commit per completed slice.
-- Compare every CV claim with working behaviour and remove anything not demonstrated.
-- Submit the MRA application.
+- Compare every claim made about the project with working behaviour and remove anything not demonstrated.
 
 Done when: a fresh setup can run the API, follow the documented customer journey, and verify the claims.
 
@@ -131,4 +130,4 @@ Done when: a fresh setup can run the API, follow the documented customer journey
 1. Test coverage depth (keep at least the booking happy-path + overbooking test)
 2. Role richness in JWT (keep basic auth, drop admin/customer role split)
 3. Error-handling polish
-Never cut Day 5 (booking creation) — it's the feature the whole CV story depends on.
+Never cut Day 5 (booking creation) — it's the feature the whole project depends on.

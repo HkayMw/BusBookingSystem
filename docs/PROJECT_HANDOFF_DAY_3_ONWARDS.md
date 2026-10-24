@@ -4,7 +4,7 @@
 
 This document gives the next development environment the context needed to continue the Bus Booking System MVP without repeating earlier architectural discussions.
 
-The project is being built as a backend REST API MVP for the MRA application. The Blazor/Web project is out of scope for this 9-day sprint.
+The project is being built as a backend REST API MVP. The Blazor/Web project is out of scope for this 9-day sprint.
 
 ## Current working approach
 
@@ -338,7 +338,7 @@ Prefer service/database behavior tests over mock interaction tests.
 
 ### Day 9: buffer and release fact-check
 
-Use the day to finish the highest-risk incomplete slice, write the README, run the full journey from a clean setup, verify Swagger, and remove unsupported CV claims.
+Use the day to finish the highest-risk incomplete slice, write the README, run the full journey from a clean setup, verify Swagger, and remove unsupported claims.
 
 ## Working style for the next environment
 

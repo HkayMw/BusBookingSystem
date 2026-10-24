@@ -87,7 +87,7 @@ Day 9 is complete when:
 - a clean database is seeded automatically in Development,
 - the full customer journey runs from the `.http` file with the expected status codes,
 - `dotnet test` passes,
-- every claim in the CV and README points to code or a test that proves it,
+- every claim made about the project, in the README or elsewhere, points to code or a test that proves it,
 - nothing is claimed that is not demonstrated,
 - `master` contains all the work, with one meaningful commit per slice.
 
@@ -101,7 +101,7 @@ Do the work in this order. Each step depends on the one before it.
 3. Journey in .http file
 4. Clean-database run     (proves 1 and 3)
 5. README                 (describes what 4 proved)
-6. Claims fact-check      (compares the CV with 4 and 5)
+6. Claims fact-check      (compares project claims with 4 and 5)
 7. Commits, push, merge
 8. Submit
 ```
@@ -418,7 +418,7 @@ Write README for setup, journey, architecture and testing
 
 ## 11. Task 6: fact-check the claims
 
-Put the CV next to the README and go through it line by line. For each claim, find the evidence. If you cannot point to code or a test, rewrite or remove the claim.
+Put every description of the project (the README and anywhere else it is described) next to the code and go through it line by line. For each claim, find the evidence. If you cannot point to code or a test, rewrite or remove the claim.
 
 ### Claims this project can support
 
@@ -515,10 +515,9 @@ Never cut:
 - [ ] The clean-database run-through table is filled in, and every row matches.
 - [ ] `dotnet test` passes.
 - [ ] The README covers the quick start, journey, seed data, endpoints, examples, architecture, decisions, testing and limitations.
-- [ ] Every CV claim has evidence; unsupported claims are removed.
+- [ ] Every claim about the project has evidence; unsupported claims are removed.
 - [ ] Every commit on `master` builds; one meaningful commit per slice.
 - [ ] `knowIssuesFix` and today's work are pushed and merged.
-- [ ] Application submitted.
 
 ## Summary
 
