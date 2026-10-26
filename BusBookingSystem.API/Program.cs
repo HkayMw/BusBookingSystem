@@ -1,4 +1,5 @@
 using BusBookingSystem.API;
+using BusBookingSystem.API.Extensions;
 using BusBookingSystem.API.Models;
 using BusBookingSystem.Application.Interfaces.Services;
 using BusBookingSystem.Infrastructure.Data;
@@ -57,8 +58,8 @@ builder.Services.AddAuthentication(option =>
     // A valid signature isn't enough: reject tokens whose user was deleted or deactivated after login.
     options.Events.OnTokenValidated = async context =>
     {
-        var userIdClaim = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(userIdClaim, out var userId))
+        var userId = context.Principal?.GetUserId();
+        if (userId is null)
         {
             context.Fail("The token has no valid user ID.");
             return;

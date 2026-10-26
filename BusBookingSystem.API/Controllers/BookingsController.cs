@@ -27,8 +27,7 @@ namespace BusBookingSystem.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<ApiResponse<BookingResponseDto>>> CreateBooking([FromBody] BookingRequestDto requestDto)
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(userIdClaim, out var userId))
+            if (User.GetUserId() is not Guid userId)
             {
                 var responseEr = Result<BookingResponseDto>.UnAuthorized("No login session active.").ToApiResponse();
                 return StatusCode(responseEr.StatusCode, responseEr.Body);
@@ -48,8 +47,7 @@ namespace BusBookingSystem.API.Controllers
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ApiResponse<BookingResponseDto>>> GetBookingById(Guid bookingId)
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(userIdClaim, out var userId))
+            if (User.GetUserId() is not Guid userId)
             {
                 var responseEr = Result<BookingResponseDto>.UnAuthorized("No login session active.").ToApiResponse();
                 return StatusCode(responseEr.StatusCode, responseEr.Body);
