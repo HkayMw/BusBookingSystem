@@ -189,12 +189,6 @@ namespace BusBookingSystem.Infrastructure.Services
                 return Result<BookingResponseDto>.BadRequest("Booking ID is required.", nameof(bookingId));
             }
 
-            var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
-            if (!userExists)
-            {
-                return Result<BookingResponseDto>.UnAuthorized("User not found.");
-            }
-
             var booking = await _context.Bookings
                 .Where(b => b.Id == bookingId && b.UserId == userId).Select(b => new BookingResponseDto
                 {

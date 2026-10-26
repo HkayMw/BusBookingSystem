@@ -308,7 +308,7 @@ public class BookingServiceTests
         Assert.Equal(ResultStatus.BadRequest, getBooking.Status);
     }
     [Fact]
-    public async Task GetBookingByIdAsync_ReturnsUnauthorized_WhenUserDoesNotExist()
+    public async Task GetBookingByIdAsync_ReturnsNotFound_WhenUserDoesNotExist()
     {
         // Arrange
         await using var context = CreateContext();
@@ -321,7 +321,7 @@ public class BookingServiceTests
         // Assert
         Assert.True(createdBooking.Success);
         Assert.False(getBooking.Success);
-        Assert.Equal(ResultStatus.UnAuthorized, getBooking.Status);
+        Assert.Equal(ResultStatus.NotFound, getBooking.Status);
     }
 
     [Fact]
