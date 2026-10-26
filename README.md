@@ -16,7 +16,7 @@ A .NET 10 solution for booking bus seats and cargo space between depots in Malaw
 browse depots -> search trips -> view trip -> register -> log in -> book seats and/or cargo -> look up booking
 ```
 
-The whole journey, including failure cases, is scripted in [`CustomerJourney.http`](BusBookingSystem.API/HttpRequests/CustomerJourney.http). It has been run end to end on a freshly seeded database using the [clean-database run-through](docs/docs/CustomerJourney.md).
+The whole journey, including failure cases, is scripted in [`CustomerJourney.http`](BusBookingSystem.API/HttpRequests/CustomerJourney.http). It has been run end to end on a freshly seeded database using the [clean-database run-through](docs/CustomerJourney.md).
 
 ## Quick start
 
@@ -218,7 +218,7 @@ The SQL Server tests use the server in the `BUSBOOKING_TEST_SQLSERVER` environme
 dotnet test BusBookingSystem.slnx --filter "Category!=SqlServer"
 ```
 
-For the manual end-to-end check, follow the [clean-database run-through](docs/docs/CustomerJourney.md).
+For the manual end-to-end check, follow the [clean-database run-through](docs/CustomerJourney.md).
 
 ## Limitations and future work
 
@@ -235,5 +235,4 @@ Next steps, roughly in order: the Blazor customer front end, a confirmation step
 
 ## Documentation
 
-- [`docs/docs/`](docs/docs/): project documentation, including the [clean-database run-through](docs/docs/CustomerJourney.md).
-- [`docs/`](docs/): development notes, the build plan and progress tracking.
+- [`docs/`](docs/): project documentation, including the [clean-database run-through](docs/CustomerJourney.md).
