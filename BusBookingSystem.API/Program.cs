@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -51,6 +52,23 @@ builder.Services.AddAuthentication(option =>
         ValidateAudience = false,
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
+    };
+
+    // A valid signature isn't enough: reject tokens whose user was deleted or deactivated after login.
+    options.Events.OnTokenValidated = async context =>
+    {
+        var userIdClaim = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdClaim, out var userId))
+        {
+            context.Fail("The token has no valid user ID.");
+            return;
+        }
+        var dbContext = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+        var isActiveUser = await dbContext.Users.AnyAsync(u => u.Id == userId && u.IsActive);
+        if (!isActiveUser)
+        {
+            context.Fail("User does not exist or is inactive.");
+        }
     };
 });
 builder.Services.AddAuthorization();
