@@ -319,4 +319,18 @@ Authorization: Bearer {{login.response.body.$.data.token}}
 GET {{host}}/api/bookings/{{booking.response.body.$.data.bookingId}}
 Accept: application/json
 
+### B16. Log in as the seeded deactivated customer, with the correct password
+# Expect response: 401 Unauthorized, "Invalid email or password." (the same response as a wrong password)
+
+@inactiveEmail = inactive@example.com
+
+POST {{host}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "{{inactiveEmail}}",
+  "password": "{{password}}"
+}
+
 ###
