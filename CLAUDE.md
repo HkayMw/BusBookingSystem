@@ -6,7 +6,7 @@ Guidance for working in this repository.
 
 Bus Booking System: a backend REST API MVP (ASP.NET Core, .NET 10, EF Core + SQL Server). Customers browse depots, search trips, view trip details, register/log in (JWT), and book seats and/or cargo space on a trip.
 
-Sprint planning and design decisions live in [docs/](docs/) (development reference). Project documentation that ships with the system and is linked from the README lives in [docs/docs/](docs/docs/); put new user-facing docs there by default. Read [docs/PROJECT_HANDOFF_DAY_3_ONWARDS.md](docs/PROJECT_HANDOFF_DAY_3_ONWARDS.md) before making architectural changes. The docs can be out of date, so check the code too.
+Project documentation that ships with the system and is linked from the README lives in [docs/](docs/); put new user-facing docs there by default. Development notes (plans, walkthroughs, progress, the PR review checklist) live in `docs/docs/`, which is git-ignored and kept local only, so it may be missing in a fresh clone. When it is present, read `docs/docs/PROGRESS.md` first and `docs/docs/PROJECT_HANDOFF_DAY_3_ONWARDS.md` before making architectural changes. The docs can be out of date, so check the code too.
 
 ## Solution layout
 
@@ -104,7 +104,7 @@ Match the existing code:
 ## Commit messages
 
 - Describe the code and behaviour change in the imperative: "Add booking lookup restricted to the booking owner", "Order active depots by name".
-- Never mention days, tasks or sessions from the learning plan in `docs/`. The git history describes the system, so it must read clearly to someone who has never seen the plan.
+- Never mention days, tasks or sessions from the development notes in `docs/docs/`. The git history describes the system, so it must read clearly to someone who has never seen the plan.
 - One meaningful commit per slice; the body (optional) lists the notable changes.
 
 ## Known issues / gotchas
