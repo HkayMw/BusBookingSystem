@@ -56,7 +56,7 @@ The API refuses to start if `JwtSettings:Secret` is missing or shorter than 32 b
 
 ## Seed data
 
-In Development, `DevelopmentDataSeeder` fills an empty database on startup. It does nothing if any depot already exists, so restarting never duplicates data. No users are seeded: customers register through the API.
+In Development, `DevelopmentDataSeeder` fills an empty database on startup. It does nothing if any depot already exists, so restarting never duplicates data. One user is seeded: a **deactivated** customer (`inactive@example.com`, password `Passw0rd!`) that cannot log in. Active customers register through the API.
 
 Trips are created for **tomorrow** (Malawi time, UTC+2), relative to the day the database is seeded. After a day or two they are in the past. To reseed, drop and recreate the database:
 
@@ -76,6 +76,7 @@ Fares are in Malawi kwacha (MWK).
 | Trip   | Lilongwe → Mzuzu, 14:00                                                              | Search filters by route                             |
 | Trip   | Mzuzu → Lilongwe, 07:00, no cargo fare                                               | Cargo is rejected on a trip without a cargo fare    |
 | Trip   | Lilongwe → Dedza, 09:00, on the minibus                                              | Cargo is rejected on a bus with no cargo space      |
+| User   | `inactive@example.com`, deactivated                                                  | Inactive accounts cannot log in (journey row B16)   |
 
 ## Endpoints
 
@@ -196,6 +197,7 @@ Controller -> I*Service (Application) -> *Service (Infrastructure) -> AppDbConte
 - **Fares are stored on the booking.** Seat, cargo and total fares are saved when the booking is made, so later fare changes do not change what a customer paid. Money uses `decimal(18,2)`.
 - **Cargo needs both capacity and a fare.** A bus without cargo space, or a trip without a cargo fare, rejects cargo bookings with a specific message.
 - **Simple domain model.** `Trip` combines the schedule and the trip (bus, route, times, fares, booked counts). A `User` with the customer type owns bookings; there is no separate customer entity.
+- **Tokens are checked against the database.** Every authenticated request confirms that the token's user still exists and is active, so a token stops working as soon as its account is deleted or deactivated. Inactive users cannot log in, and get the same message as a wrong password.
 - **Secrets stay out of source control.** The JWT secret comes from user secrets in Development and from an environment variable elsewhere.
 - **Read queries project straight to DTOs** with `Select` and `AsNoTracking`, so entities and password hashes never leave the service layer.
 - **Scalar instead of Swagger UI** for the API reference, at `/scalar` in Development.
@@ -228,7 +230,7 @@ What the system does not do yet:
 - **Booking lifecycle.** New bookings stay `Pending`. There is no confirmation, cancellation or refund.
 - **Payments.** None.
 - **Administration.** Depots, buses, routes and trips come only from the seed data; there are no admin endpoints.
-- **Authorization rules.** The token carries a role claim, but no endpoint checks it. Tokens last seven days and there are no refresh tokens or revocation.
+- **Authorization rules.** The token carries a role claim, but no endpoint checks it. Tokens last seven days and there are no refresh tokens. The only way to revoke a token is to deactivate or delete its user.
 - **Deployment.** No Docker setup, CI pipeline or hosting.
 
 Next steps, roughly in order: the Blazor customer front end, a confirmation step for bookings, admin endpoints for managing the network, then roles, refresh tokens and a CI pipeline.

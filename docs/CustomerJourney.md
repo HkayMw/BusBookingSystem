@@ -2,7 +2,7 @@
 
 This checklist proves the whole customer journey works from a freshly seeded database. Run it before a release, after changing the seed data, or after any change to booking, trip or auth behaviour.
 
-The rows follow the order of [`CustomerJourney.http`](../../BusBookingSystem.API/HttpRequests/CustomerJourney.http): Part A (happy path), then Part B (edge cases and failure paths), then two checks outside the file. Each row's ID matches the request heading in the `.http` file.
+The rows follow the order of [`CustomerJourney.http`](../BusBookingSystem.API/HttpRequests/CustomerJourney.http): Part A (happy path), then Part B (edge cases and failure paths), then three checks outside the file. Each row's ID matches the request heading in the `.http` file.
 
 ## Run record
 
@@ -74,13 +74,23 @@ Seeded fares are in Malawi kwacha (MWK). Depots are listed by name: `[0]` Blanty
 | 27  | B13 | `POST /api/bookings` unknown trip                                 | 404, "Trip was not found."                                                                               |        |
 | 28  | B14 | `GET /api/bookings/{random guid}`                                 | 404, "Booking not found."                                                                                |        |
 | 29  | B15 | `GET /api/bookings/{bookingId}` with no token                     | 401, empty body (rejected by `[Authorize]`)                                                              |        |
+| 30  | B16 | `POST /api/auth/login` seeded deactivated customer, correct password | 401, "Invalid email or password." (same as a wrong password, so the account state is not revealed)     |        |
 
 ### Outside the `.http` file
 
 | #   | ID  | Check                                               | Expected                                                             | Actual |
 | --- | --- | --------------------------------------------------- | -------------------------------------------------------------------- | ------ |
-| 30  | R1  | Stop and restart the API, then send A1 and A4 again | Still four depots and five trips: the seeder does not duplicate data |        |
-| 31  | R2  | `dotnet test BusBookingSystem.slnx`                 | All tests pass (SQL Server tests skip when no server is reachable)   |        |
+| 31  | R1  | Stop and restart the API, then send A1 and A4 again | Still four depots and five trips: the seeder does not duplicate data |        |
+| 32  | R2  | `dotnet test BusBookingSystem.slnx`                 | All tests pass (SQL Server tests skip when no server is reachable)   |        |
+| 33  | R3  | Deactivate the demo customer, then send A9 again with the same token (SQL below) | 401, empty body: the token stops working once its user is inactive. Reactivate afterwards |        |
+
+SQL for R3 (run against the development database):
+
+```sql
+UPDATE Users SET IsActive = 0 WHERE Email = 'demo@example.com';
+-- send A9 again: expect 401
+UPDATE Users SET IsActive = 1 WHERE Email = 'demo@example.com';
+```
 
 ## Notes
 

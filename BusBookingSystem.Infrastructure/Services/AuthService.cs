@@ -95,7 +95,8 @@ namespace BusBookingSystem.Infrastructure.Services
             // retrieve user
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == userLoginRequestDto.Email.ToLower());
 
-            // same message for unknown email and wrong password, so login does not reveal which emails are registered
+            // same message for unknown email, wrong password and inactive account,
+            // so login does not reveal whether the email is registered or not, or if the account is inactive.
             if (user is null)
             {
                 return Result<AuthResponseDto>.UnAuthorized("Invalid email or password.");
@@ -103,6 +104,11 @@ namespace BusBookingSystem.Infrastructure.Services
 
             // check password
             if (new PasswordHasher<User>().VerifyHashedPassword(user, user.PasswordHash, userLoginRequestDto.Password) == PasswordVerificationResult.Failed)
+            {
+                return Result<AuthResponseDto>.UnAuthorized("Invalid email or password.");
+            }
+
+            if (!user.IsActive)
             {
                 return Result<AuthResponseDto>.UnAuthorized("Invalid email or password.");
             }

@@ -1,5 +1,6 @@
 ﻿using BusBookingSystem.Core.Entities;
 using BusBookingSystem.Core.Enums;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace BusBookingSystem.Infrastructure.Data
@@ -233,6 +234,21 @@ namespace BusBookingSystem.Infrastructure.Data
             };
 
             dbContext.Trips.AddRange(blantyreToLilongweTrip, lilongweToBlantyreTrip, mzuzuToLilongweTrip, lilongweToMzuzuTrip, lilongweToDedzaTrip);
+
+            // 6. Users: one deactivated customer, so the customer journey can show that inactive accounts cannot log in.
+            //    Active customers register through the API (CustomerJourney.http, A2).
+            var inactiveCustomer = new User
+            {
+                FirstName = "Inactive",
+                LastName = "Customer",
+                Email = "inactive@example.com",
+                PasswordHash = string.Empty, // required by the entity; replaced by the real hash below
+                UserType = UserType.Customer,
+                IsActive = false
+            };
+            inactiveCustomer.PasswordHash = new PasswordHasher<User>().HashPassword(inactiveCustomer, "Passw0rd!");
+
+            dbContext.Users.Add(inactiveCustomer);
 
             await dbContext.SaveChangesAsync();
 
