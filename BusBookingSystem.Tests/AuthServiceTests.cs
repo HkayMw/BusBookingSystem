@@ -152,6 +152,27 @@ public class AuthServiceTests
         Assert.Equal(unknownEmail.Message, wrongPassword.Message);
     }
 
+    [Fact]
+    public async Task LoginAsync_ReturnsUnauthorized_ForInactiveUser()
+    {
+        // Arrange: a registered user whose account is later deactivated
+        await using var context = CreateContext();
+        var service = CreateService(context);
+        await service.RegisterAsync(CreateRegisterRequest("chikondi@example.com"));
+        var user = await context.Users.SingleAsync(u => u.Email.ToLower() == "chikondi@example.com");
+        user.IsActive = false;
+        await context.SaveChangesAsync();
+
+        // Act: the correct password, so only the IsActive check can reject the login
+        var result = await service.LoginAsync(new UserLoginRequestDto { Email = "chikondi@example.com", Password = Password });
+
+        // Assert: the same response as a wrong password, so login does not reveal the account state
+        Assert.False(result.Success);
+        Assert.Equal(ResultStatus.UnAuthorized, result.Status);
+        Assert.Equal("Invalid email or password.", result.Message);
+        Assert.Null(result.Data);
+    }
+
     #endregion
 
     #region Helpers

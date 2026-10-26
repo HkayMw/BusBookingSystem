@@ -165,6 +165,36 @@ public class BookingAuthorizationApiTests(BookingApiFactory factory) : IClassFix
         Assert.Equal(HttpStatusCode.NotFound, otherCustomerResponse.StatusCode);
     }
 
+    [Fact]
+    public async Task GetBookingById_ReturnsUnauthorized_WhenTokenUserDoesNotExist()
+    {
+        // Arrange: a correctly signed token for a user ID that was never saved
+        var client = CreateClientFor(Guid.NewGuid());
+
+        // Act: without the check in OnTokenValidated, this request would reach the service and return 404
+        var response = await client.GetAsync($"{BookingUrl}/{Guid.NewGuid()}");
+
+        // Assert: rejected by authentication (empty body), not by the service (ApiResponse body)
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Empty(await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task GetBookingById_ReturnsUnauthorized_WhenTokenUserIsInactive()
+    {
+        // Arrange: the owner holds a valid token, then the account is deactivated
+        var (ownerId, _, bookingId) = await SeedBookingAsync();
+        var ownerClient = CreateClientFor(ownerId);
+        await DeactivateUserAsync(ownerId);
+
+        // Act: without the check in OnTokenValidated, the owner would still get 200 for their own booking
+        var response = await ownerClient.GetAsync($"{BookingUrl}/{bookingId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Empty(await response.Content.ReadAsStringAsync());
+    }
+
     #endregion
 
     #region Helpers
@@ -302,6 +332,17 @@ public class BookingAuthorizationApiTests(BookingApiFactory factory) : IClassFix
         await db.SaveChangesAsync();
 
         return (owner.Id, otherCustomer.Id, booking.Id);
+    }
+
+    /// <summary>Marks a seeded user inactive, as an administrator would after the user has logged in.</summary>
+    private async Task DeactivateUserAsync(Guid userId)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var user = await db.Users.FindAsync(userId);
+        Assert.NotNull(user);
+        user.IsActive = false;
+        await db.SaveChangesAsync();
     }
 
     private static string CreateToken(string secret, Guid? userId = null)
