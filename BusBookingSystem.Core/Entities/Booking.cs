@@ -16,6 +16,7 @@ namespace BusBookingSystem.Core.Entities
         public decimal TotalFare { get; set; }
         public required string BookingReference { get; set; }
         public BookingStatus BookingStatus { get; set; }
+        public DateTimeOffset HoldExpiresAt { get; set; }
         public byte[] RowVersion { get; set; } = default!;
 
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;

@@ -6,16 +6,19 @@ using BusBookingSystem.Core.Entities;
 using BusBookingSystem.Core.Enums;
 using BusBookingSystem.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace BusBookingSystem.Infrastructure.Services
 {
     public class BookingService : IBookingService
     {
         private readonly AppDbContext _context;
+        private readonly int _bookingHoldDurationInMinutes;
 
-        public BookingService(AppDbContext context)
+        public BookingService(AppDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _bookingHoldDurationInMinutes = configuration.GetValue<int>("appConfigurations:BookingHoldDurationInMinutes");
         }
 
         /// <summary>
@@ -128,6 +131,7 @@ namespace BusBookingSystem.Infrastructure.Services
                     TotalFare = (trip.SeatFare * requestDto.NumberOfSeats) + ((trip.CargoFare ?? 0m) * requestDto.CargoWeight),
                     BookingReference = bookingReference,
                     BookingStatus = BookingStatus.Pending,
+                    HoldExpiresAt = DateTimeOffset.UtcNow.AddMinutes(_bookingHoldDurationInMinutes),
                     Trip = trip
                 };
 
@@ -147,6 +151,7 @@ namespace BusBookingSystem.Infrastructure.Services
                     BookingId = booking.Id,
                     CustomerName = customerName,
                     BookingStatus = booking.BookingStatus,
+                    HoldExpiresAt = booking.HoldExpiresAt,
                     BookingReference = booking.BookingReference,
                     TripSummary = $"{trip.Route.Origin.Name} → {trip.Route.Destination.Name} on {trip.DepartureTime:ddd, dd MMM yyyy}",
                     NumberOfSeats = booking.NumberOfSeats,
@@ -196,6 +201,7 @@ namespace BusBookingSystem.Infrastructure.Services
                     CustomerName = b.User.FirstName + " " + b.User.LastName,
                     BookingReference = b.BookingReference,
                     BookingStatus = b.BookingStatus,
+                    HoldExpiresAt = b.HoldExpiresAt,
                     TripSummary = $"{b.Trip.Route.Origin.Name} → {b.Trip.Route.Destination.Name} on {b.Trip.DepartureTime:ddd, dd MMM yyyy}",
                     NumberOfSeats = b.NumberOfSeats,
                     CargoWeight = b.CargoWeight,

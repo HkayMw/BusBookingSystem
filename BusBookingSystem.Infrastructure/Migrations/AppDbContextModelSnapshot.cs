@@ -50,6 +50,9 @@ namespace BusBookingSystem.Infrastructure.Migrations
                         .HasColumnType("datetimeoffset")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
 
+                    b.Property<DateTimeOffset>("HoldExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<int>("NumberOfSeats")
                         .HasColumnType("int");
 
