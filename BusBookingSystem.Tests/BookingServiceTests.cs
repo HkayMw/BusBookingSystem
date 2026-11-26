@@ -6,6 +6,7 @@ using BusBookingSystem.Infrastructure.Data;
 using BusBookingSystem.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Configuration;
 
 namespace BusBookingSystem.Tests;
 
@@ -26,7 +27,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, trip) = await SeedTripAsync(context);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var request = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = numberOfSeats, CargoWeight = cargoWeight };
 
         // Act
@@ -48,7 +49,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (_, trip) = await SeedTripAsync(context);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var request = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 1 };
 
         // Act
@@ -66,7 +67,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, _) = await SeedTripAsync(context);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var request = new BookingRequestDto { TripId = Guid.NewGuid(), NumberOfSeats = 1 };
 
         // Act
@@ -88,7 +89,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, trip) = await SeedTripAsync(context, seatsBooked: BusSeats - 2);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var request = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 3 };
 
         // Act
@@ -109,7 +110,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, trip) = await SeedTripAsync(context, seatsBooked: BusSeats - 2);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var request = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 2 };
 
         // Act
@@ -128,7 +129,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, trip) = await SeedTripAsync(context, hasCargoSpace: false);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var request = new BookingRequestDto { TripId = trip.Id, CargoWeight = 10 };
 
         // Act
@@ -146,7 +147,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, trip) = await SeedTripAsync(context, cargoCapacityBooked: BusCargoCapacity - 10);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var request = new BookingRequestDto { TripId = trip.Id, CargoWeight = 11 };
 
         // Act
@@ -167,7 +168,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, trip) = await SeedTripAsync(context, cargoFare: null);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var request = new BookingRequestDto { TripId = trip.Id, CargoWeight = 10 };
 
         // Act
@@ -188,7 +189,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, trip) = await SeedTripAsync(context, cargoFare: null);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var request = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 1 };
 
         // Act
@@ -209,7 +210,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, trip) = await SeedTripAsync(context, seatsBooked: 5, cargoCapacityBooked: 40);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var request = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 2 };
 
         // Act
@@ -246,7 +247,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, trip) = await SeedTripAsync(context, seatsBooked: 5, cargoCapacityBooked: 40);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var request = new BookingRequestDto { TripId = trip.Id, CargoWeight = 25 };
 
         // Act
@@ -274,7 +275,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, trip) = await SeedTripAsync(context, seatFare: 3500.75m, cargoFare: 12.50m);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var request = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 2, CargoWeight = 3 };
 
         // Act
@@ -298,7 +299,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, trip) = await SeedTripAsync(context);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var bookingRequest = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 2, CargoWeight = 3 };
         var createdBooking = await service.CreateBookingAsync(user.Id, bookingRequest);
         // Act
@@ -313,7 +314,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, trip) = await SeedTripAsync(context);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var bookingRequest = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 2, CargoWeight = 3 };
         var createdBooking = await service.CreateBookingAsync(user.Id, bookingRequest);
         // Act
@@ -330,7 +331,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, trip) = await SeedTripAsync(context);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var bookingRequest = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 2, CargoWeight = 3 };
         var createdBooking = await service.CreateBookingAsync(user.Id, bookingRequest);
         // Act
@@ -347,7 +348,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, trip) = await SeedTripAsync(context);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var bookingRequest = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 2, CargoWeight = 3 };
         var createdBooking = await service.CreateBookingAsync(user.Id, bookingRequest);
         var user2 = await context.Users.FirstOrDefaultAsync(u => u.Id != user.Id) ?? throw new InvalidOperationException("No second user found.");
@@ -365,7 +366,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, _) = await SeedTripAsync(context);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         // Act
         var getBooking = await service.GetBookingByIdAsync(user.Id, Guid.NewGuid());
         // Assert
@@ -379,7 +380,7 @@ public class BookingServiceTests
         // Arrange
         await using var context = CreateContext();
         var (user, trip) = await SeedTripAsync(context);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
         var bookingRequest = new BookingRequestDto { TripId = trip.Id, NumberOfSeats = 2, CargoWeight = 3 };
         var createdBooking = await service.CreateBookingAsync(user.Id, bookingRequest);
 
@@ -519,5 +520,14 @@ public class BookingServiceTests
     private static Task<Trip> GetStoredTripAsync(AppDbContext context, Guid tripId) =>
         context.Trips.AsNoTracking().SingleAsync(t => t.Id == tripId);
 
+    private static IConfiguration CreateConfiguration(int holdMinutes = 15)
+    {
+        return new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["appConfigurations:BookingHoldDurationInMinutes"] = holdMinutes.ToString()
+            })
+            .Build();
+    }
     #endregion
 }

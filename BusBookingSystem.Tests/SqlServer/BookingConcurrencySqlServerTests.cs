@@ -6,6 +6,7 @@ using BusBookingSystem.Infrastructure.Data;
 using BusBookingSystem.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Configuration;
 
 namespace BusBookingSystem.Tests.SqlServer;
 
@@ -29,12 +30,12 @@ public class BookingConcurrencySqlServerTests(SqlServerDatabaseFixture database)
         var interceptor = new RunOnceBeforeSaveInterceptor(async () =>
         {
             await using var otherContext = database.CreateContext();
-            secondResult = await new BookingService(otherContext).CreateBookingAsync(
+            secondResult = await new BookingService(otherContext, CreateConfiguration()).CreateBookingAsync(
                 secondCustomerId, new BookingRequestDto { TripId = tripId, NumberOfSeats = 1 });
         });
 
         await using var context = database.CreateContext(interceptor);
-        var service = new BookingService(context);
+        var service = new BookingService(context, CreateConfiguration());
 
         // Act
         var firstResult = await service.CreateBookingAsync(
@@ -156,5 +157,15 @@ public class BookingConcurrencySqlServerTests(SqlServerDatabaseFixture database)
 
             return result;
         }
+    }
+
+    private static IConfiguration CreateConfiguration(int holdMinutes = 15)
+    {
+        return new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["appConfigurations:BookingHoldDurationInMinutes"] = holdMinutes.ToString()
+            })
+            .Build();
     }
 }
